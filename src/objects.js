@@ -33,11 +33,34 @@ export const addPillar = scene => {
   )
 
   scene.add(pillar)
-  pillar.position.setX((Math.random() - 0.5) * CONSTS.FLOOR_WIDTH)
-  pillar.position.setY(CONSTS.PILLAR_HEIGHT / 2)
-  pillar.position.setZ(CONSTS.FLOOR_DEPTH / 2)
+  pillar.position.set((Math.random() - 0.5) * CONSTS.FLOOR_WIDTH,
+    CONSTS.PILLAR_HEIGHT / 2,
+    -CONSTS.FLOOR_DEPTH / 2
+  )
 
   return pillar
+}
+
+export const addBird = scene => {
+  const bird = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      CONSTS.BIRD_WIDTH,
+      CONSTS.BIRD_HEIGHT,
+      CONSTS.BIRD_DEPTH
+    ),
+    new THREE.MeshBasicMaterial({
+      color: CONSTS.BIRD_COLOR
+    })
+  )
+
+  scene.add(bird)
+  bird.position.set(
+    CONSTS.CAMERA_POS_X,
+    CONSTS.CAMERA_POS_Y - 0.75,
+    CONSTS.CAMERA_POS_Z - 2
+  )
+
+  return bird
 }
 
 export const remove = (obj, scene) => {

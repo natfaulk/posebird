@@ -21,9 +21,9 @@ export class Pillars {
     // of indexes to be removed after
     const toremove = []
     this.pillars.forEach((p, i) => {
-      p.position.z -= 0.01
+      p.position.z += 0.01
 
-      if (p.position.z < -CONSTS.FLOOR_DEPTH / 2) {
+      if (p.position.z > CONSTS.FLOOR_DEPTH / 2) {
         toremove.push(i)
       }
     })
