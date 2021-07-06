@@ -1,0 +1,20 @@
+{
+  "name": "posebird",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild src/app.js --bundle --minify --sourcemap --outfile=public/main.js",
+    "watch": "esbuild src/app.js --bundle --minify --sourcemap --outfile=public/main.js --watch"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.12.14",
+    "eslint": "^7.30.0"
+  },
+  "dependencies": {
+    "@natfaulk/supersimplelogger": "^1.0.3",
+    "three": "^0.130.1"
+  }
+}
