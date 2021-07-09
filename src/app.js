@@ -4,13 +4,13 @@ import * as THREE from 'three'
 import * as Scene from './scene'
 import * as Objects from './objects'
 import {Pillars} from './pillars'
-import {CAMERA_POS_X, CAMERA_POS_Y, CAMERA_POS_Z} from './constants'
+import * as CONSTS from './constants'
 import * as Keyboard from './keyboard'
 import {newBird} from './bird'
 
 const lg = makeLogger('App')
 
-const ORBIT_CAM = true
+const ORBIT_CAM = false
 
 ;(async () => {
   lg('Started...')
@@ -27,7 +27,7 @@ const ORBIT_CAM = true
     pillars.add()
   }, 3000)
 
-  camera.position.set(CAMERA_POS_X, CAMERA_POS_Y, CAMERA_POS_Z)
+  camera.position.set(CONSTS.CAMERA_POS_X, CONSTS.CAMERA_POS_Y, CONSTS.CAMERA_POS_Z)
   camera.lookAt(new THREE.Vector3(0, 2, 0))
 
   // let prevtime = 0
@@ -40,6 +40,8 @@ const ORBIT_CAM = true
     pillars.tick()
 
     bird.tick(Keyboard)
+    camera.position.setX(bird.obj.position.x - CONSTS.CAMERA_BIRD_OFFSET_X)
+    camera.position.setY(bird.obj.position.y - CONSTS.CAMERA_BIRD_OFFSET_Y)
 
     requestAnimationFrame(animate)
     stats.begin()

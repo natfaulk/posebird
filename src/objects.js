@@ -62,9 +62,9 @@ export const addBird = async scene => {
 
   scene.add(bird)
   bird.position.set(
-    CONSTS.CAMERA_POS_X,
-    CONSTS.CAMERA_POS_Y - 0.75,
-    CONSTS.CAMERA_POS_Z - 2
+    CONSTS.BIRD_INIT_POS_X,
+    CONSTS.BIRD_INIT_POS_Y,
+    CONSTS.BIRD_INIT_POS_Z
   )
 
   return bird
