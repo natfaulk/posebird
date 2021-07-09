@@ -6,20 +6,20 @@ import * as Objects from './objects'
 import {Pillars} from './pillars'
 import {CAMERA_POS_X, CAMERA_POS_Y, CAMERA_POS_Z} from './constants'
 import * as Keyboard from './keyboard'
-import {Bird} from './bird'
+import {newBird} from './bird'
 
 const lg = makeLogger('App')
 
 const ORBIT_CAM = true
 
-;(() => {
+;(async () => {
   lg('Started...')
   const {scene, camera, renderer, stats} = Scene.setup(ORBIT_CAM)
   
   Keyboard.setup()
   
   const floor = Objects.addFloor(scene)
-  const bird = new Bird(scene)
+  const bird = await newBird(scene)
   const pillars = new Pillars(scene)
   pillars.add()
 
@@ -29,7 +29,7 @@ const ORBIT_CAM = true
 
   camera.position.set(CAMERA_POS_X, CAMERA_POS_Y, CAMERA_POS_Z)
   camera.lookAt(new THREE.Vector3(0, 2, 0))
-  
+
   // let prevtime = 0
   const animate = () => {
     // lg(time-prevtime)

@@ -1,5 +1,10 @@
+import makeLogger from '@natfaulk/supersimplelogger'
+
 import * as THREE from 'three'
 import * as CONSTS from './constants'
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
+
+const lg = makeLogger('App')
 
 export const addFloor = scene => {
   const plane = new THREE.Mesh(
@@ -41,17 +46,19 @@ export const addPillar = scene => {
   return pillar
 }
 
-export const addBird = scene => {
-  const bird = new THREE.Mesh(
-    new THREE.BoxGeometry(
-      CONSTS.BIRD_WIDTH,
-      CONSTS.BIRD_HEIGHT,
-      CONSTS.BIRD_DEPTH
-    ),
-    new THREE.MeshBasicMaterial({
-      color: CONSTS.BIRD_COLOR
-    })
-  )
+export const addBird = async scene => {
+  // const bird = new THREE.Mesh(
+  //   new THREE.BoxGeometry(
+  //     CONSTS.BIRD_WIDTH,
+  //     CONSTS.BIRD_HEIGHT,
+  //     CONSTS.BIRD_DEPTH
+  //   ),
+  //   new THREE.MeshBasicMaterial({
+  //     color: CONSTS.BIRD_COLOR
+  //   })
+  // )
+
+  const bird = await loadGltf('public/models/bird.glb')
 
   scene.add(bird)
   bird.position.set(
@@ -67,4 +74,16 @@ export const remove = (obj, scene) => {
   obj.geometry.dispose()
   obj.material.dispose()
   scene.remove(obj)
+}
+
+const loadGltf = path => {
+  return new Promise((resolve, reject) => {
+    const loader = new GLTFLoader()
+    loader.load(path, gltf => {
+      resolve(gltf.scene)
+    }, undefined,  error => {
+      lg('GLTF model failed to load...', error)
+      reject(error)
+    })
+  })
 }
