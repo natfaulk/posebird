@@ -7,6 +7,7 @@ import * as Keyboard from './keyboard'
 import {newBird} from './bird'
 import * as Camera from './camera'
 import * as Lighting from './lighting'
+import * as CONSTS from './constants'
 
 const lg = makeLogger('App')
 
@@ -21,25 +22,26 @@ const ORBIT_CAM = false
   const floor = Objects.addFloor(scene)
   const bird = await newBird(scene)
   const pillars = new Pillars(scene)
-  pillars.add()
-
-  setInterval(() => {
-    pillars.add()
-  }, 3000)
 
   Lighting.setup(scene)
 
   // performs setup and adds custom tick method to camera
   Camera.setup(camera, bird.obj)
 
-  // let prevtime = 0
-  const animate = () => {
-    // lg(time-prevtime)
-    // prevtime = time
+  let prevtime = 0
+  const animate = time => {
+    const deltaTime = time-prevtime
+    prevtime = time
+    // lg(`Time: ${time}, Delta time: ${deltaTime}`)
+    if (isNaN(deltaTime)) {
+      requestAnimationFrame(animate)
+      return
+    }
 
-    floor.position.z += 0.01
-    if (floor.position.z > 0) floor.position.z -= 1
-    pillars.tick()
+    
+    floor.position.z += CONSTS.PILLAR_SPEED * (deltaTime / 1000)
+    while (floor.position.z > 0) floor.position.z -= 1
+    pillars.tick(time, deltaTime)
 
     bird.tick(Keyboard)
     camera.tick()

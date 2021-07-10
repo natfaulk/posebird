@@ -25,7 +25,11 @@ export const addFloor = scene => {
   return plane
 }
 
-export const addPillar = scene => {
+export const addPillar = (scene, zposition=null) => {
+  if (zposition === null) {
+    zposition = -CONSTS.FLOOR_DEPTH / 2
+  }
+  
   const pillar = new THREE.Mesh(
     new THREE.BoxGeometry(
       CONSTS.PILLAR_WIDTH,
@@ -40,7 +44,7 @@ export const addPillar = scene => {
   scene.add(pillar)
   pillar.position.set((Math.random() - 0.5) * CONSTS.FLOOR_WIDTH,
     CONSTS.PILLAR_HEIGHT / 2,
-    -CONSTS.FLOOR_DEPTH / 2
+    zposition
   )
 
   return pillar
