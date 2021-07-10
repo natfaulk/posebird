@@ -1,12 +1,12 @@
 import makeLogger from '@natfaulk/supersimplelogger'
-import * as THREE from 'three'
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import * as Scene from './scene'
 import * as Objects from './objects'
 import {Pillars} from './pillars'
-import * as CONSTS from './constants'
 import * as Keyboard from './keyboard'
 import {newBird} from './bird'
+import * as Camera from './camera'
+import * as Lighting from './lighting'
 
 const lg = makeLogger('App')
 
@@ -27,8 +27,10 @@ const ORBIT_CAM = false
     pillars.add()
   }, 3000)
 
-  camera.position.set(CONSTS.CAMERA_POS_X, CONSTS.CAMERA_POS_Y, CONSTS.CAMERA_POS_Z)
-  camera.lookAt(new THREE.Vector3(0, 2, 0))
+  Lighting.setup(scene)
+
+  // performs setup and adds custom tick method to camera
+  Camera.setup(camera, bird.obj)
 
   // let prevtime = 0
   const animate = () => {
@@ -40,8 +42,7 @@ const ORBIT_CAM = false
     pillars.tick()
 
     bird.tick(Keyboard)
-    camera.position.setX(bird.obj.position.x - CONSTS.CAMERA_BIRD_OFFSET_X)
-    camera.position.setY(bird.obj.position.y - CONSTS.CAMERA_BIRD_OFFSET_Y)
+    camera.tick()
 
     requestAnimationFrame(animate)
     stats.begin()

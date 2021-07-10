@@ -6,6 +6,11 @@ export const PILLAR_WIDTH = 0.5
 export const PILLAR_HEIGHT = 5
 export const PILLAR_COLOR = 0x66563c
 
+export const CAMERA_FOV = 75
+export const CAMERA_NEAR = 0.1
+export const CAMERA_FAR = 1000
+export const CAMERA_CLEAR_COLOR = 0xb8c6db
+
 export const CAMERA_POS_X = 0
 export const CAMERA_POS_Y = 3
 export const CAMERA_POS_Z = 8

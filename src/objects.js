@@ -32,7 +32,7 @@ export const addPillar = scene => {
       CONSTS.PILLAR_HEIGHT,
       CONSTS.PILLAR_WIDTH
     ),
-    new THREE.MeshBasicMaterial({
+    new THREE.MeshPhongMaterial({
       color: CONSTS.PILLAR_COLOR
     })
   )
