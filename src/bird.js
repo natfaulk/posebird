@@ -5,26 +5,51 @@ import * as CONSTS from './constants'
 class Bird {
   constructor () {
     // these all need setting - are set in the factory function (newBird)
+    /**
+     * @type {THREE.Mesh}
+     */
     this.obj = null
+    /**
+     * @type {THREE.BoxHelper} 
+     */
     this.bbHelper = null
+    /**
+     * @type {THREE.Box3} 
+     */
     this.bb = null
   }
 
   tick(keyboard) {
-    if (keyboard.up()) {
+    // do nothing if both keys pressed
+    if (keyboard.up() && !keyboard.down()) {
       this.obj.position.y += 0.1
+      this.obj.rotation.x = THREE.MathUtils.degToRad(20)
     }
     
-    if (keyboard.down()) {
+    else if (keyboard.down() && !keyboard.up()) {
       this.obj.position.y -= 0.1
+      this.obj.rotation.x = THREE.MathUtils.degToRad(-20)
     }
 
-    if (keyboard.left()) {
+    else {
+      this.obj.rotation.x = 0
+    }
+    
+    if (keyboard.left() && !keyboard.right()) {
+      this.obj.rotation.z = THREE.MathUtils.degToRad(20)
+      this.obj.rotation.y = THREE.MathUtils.degToRad(5)
       this.obj.position.x -= 0.1
     }
-
-    if (keyboard.right()) {
+    
+    else if (keyboard.right() && !keyboard.left()) {
+      this.obj.rotation.z = THREE.MathUtils.degToRad(-20)
+      this.obj.rotation.y = THREE.MathUtils.degToRad(-5)
       this.obj.position.x += 0.1
+    }
+
+    else {
+      this.obj.rotation.z = 0
+      this.obj.rotation.y = 0
     }
 
     this.bbHelper.update()
