@@ -50,30 +50,6 @@ export const addPillar = (scene, zposition=null) => {
   return pillar
 }
 
-export const addVisibleBB = (scene, bb) => {
-  const x = (bb.max.x + bb.min.x) / 2
-  const y = (bb.max.y + bb.min.y) / 2
-  const z = (bb.max.z + bb.min.z) / 2
-  
-  const w = bb.max.x - bb.min.x
-  const h = bb.max.y - bb.min.y
-  const d = bb.max.z - bb.min.z
-
-  const bbMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(w, h, d),
-    new THREE.MeshBasicMaterial({
-      color: 0xff0000,
-      wireframe: true,
-    })
-  )
-  
-  scene.add(bbMesh)
-  bbMesh.position.set(x, y, z)
-
-  return bbMesh
-}
-
-
 export const addBird = async scene => {
   // const bird = new THREE.Mesh(
   //   new THREE.BoxGeometry(

@@ -4,7 +4,10 @@ import * as CONSTS from './constants'
 
 class Bird {
   constructor () {
+    // these all need setting - are set in the factory function (newBird)
     this.obj = null
+    this.bbHelper = null
+    this.bb = null
   }
 
   tick(keyboard) {
@@ -24,7 +27,11 @@ class Bird {
       this.obj.position.x += 0.1
     }
 
-    if (CONSTS.SHOW_BOUNDING_BOXES) this.bbHelper.update()
+    this.bbHelper.update()
+    // seems to be a bug in the three js library where the bounding sphere
+    // is updated instead of the bounding box, so call it manually
+    this.bbHelper.geometry.computeBoundingBox()
+    this.bb.setFromObject(this.bbHelper)
   }
 }
 
@@ -33,19 +40,14 @@ class Bird {
 // after creation. There is no checking to make sure that the obj exists
 // so one should always use the factory function (hence the class is unexported)
 export const newBird = async scene => {
-  const bird = new Bird(scene)
+  const bird = new Bird()
 
   bird.obj = await Objects.addBird(scene)
+  bird.bbHelper = new THREE.BoxHelper(bird.obj, CONSTS.BOUNDING_BOX_COLOR)
+  scene.add(bird.bbHelper)
+  bird.bbHelper.visible = CONSTS.SHOW_BOUNDING_BOXES
+  bird.bb = new THREE.Box3()
+  bird.bb.setFromObject(bird.bbHelper)
 
-  if (CONSTS.SHOW_BOUNDING_BOXES) {
-    const bbHelper = new THREE.BoxHelper(bird.obj, 0xff0000)
-    scene.add(bbHelper)
-    bird.bbHelper = bbHelper
-    // const birdBB = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
-    
-    // birdBB.setFromObject(bird.obj)
-    // bird.bbMesh = Objects.addVisibleBB(scene, birdBB)
-  }
-  
   return bird
 }

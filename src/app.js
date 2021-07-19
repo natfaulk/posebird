@@ -8,6 +8,7 @@ import {newBird} from './bird'
 import * as Camera from './camera'
 import * as Lighting from './lighting'
 import * as CONSTS from './constants'
+import {Collisions} from './collisions'
 
 const lg = makeLogger('App')
 
@@ -22,7 +23,8 @@ const ORBIT_CAM = false
   const floor = Objects.addFloor(scene)
   const bird = await newBird(scene)
   const pillars = new Pillars(scene)
-
+  const collisions = new Collisions(bird, pillars)
+  
   Lighting.setup(scene)
 
   // performs setup and adds custom tick method to camera
@@ -45,6 +47,8 @@ const ORBIT_CAM = false
 
     bird.tick(Keyboard)
     camera.tick()
+
+    if (collisions.tick()) lg('Crashed!!')
 
     requestAnimationFrame(animate)
     stats.begin()
