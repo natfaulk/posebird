@@ -44,14 +44,21 @@ export class Pillars {
   tick(time, deltaTime) {
     this.moveForward(deltaTime)
 
+    let addPillar = false
     if (this.pillars.length > 0) {
       const lastPillarPosition = this.pillars[this.pillars.length - 1].position.z
       const pillarSpacing = (-CONSTS.FLOOR_DEPTH / 2) + CONSTS.PILLAR_SPACING 
 
       if (lastPillarPosition > pillarSpacing) {
-        this.add()
-        this.lastPillarTime = time
+        addPillar = true
       }
+    } else {
+      addPillar = true
+    }
+
+    if (addPillar) {
+      this.add()
+      this.lastPillarTime = time
     }
   }
 }
