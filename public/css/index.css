@@ -33,3 +33,10 @@ div.menu-inner {
   font-size: 4em;
   border: 5px solid red;
 }
+
+div#pose-debug {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  opacity: 0.5;
+}

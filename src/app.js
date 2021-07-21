@@ -11,6 +11,7 @@ import * as CONSTS from './constants'
 import {Collisions} from './collisions'
 import {Score} from './score'
 import * as UI from './ui'
+import {PoseDetection} from './posedetection'
 
 const lg = makeLogger('App')
 
@@ -22,6 +23,8 @@ const ORBIT_CAM = false
   // just hide menu for now...
   UI.init()
   UI.hideMenu()
+
+  const pose = new PoseDetection()
   
   const {scene, camera, renderer, stats} = Scene.setup(ORBIT_CAM)
   
@@ -64,6 +67,7 @@ const ORBIT_CAM = false
     stats.begin()
     renderer.render(scene, camera)
     score.update()
+    pose.update()
     stats.end()
   }
   animate()

@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "esbuild src/app.js --bundle --minify --sourcemap --outfile=public/main.js",
-    "watch": "npm run build -- --watch",
+    "buildprod": "esbuild src/app.js --bundle --minify --sourcemap --outfile=public/main.js",
+    "builddev": "esbuild src/app.js --bundle --sourcemap --outfile=public/main.js",
+    "watch": "npm run builddev -- --watch",
     "dev-server": "node devserver.js",
     "dev": "run-p watch dev-server"
   },
@@ -19,6 +20,9 @@
   },
   "dependencies": {
     "@natfaulk/supersimplelogger": "^1.0.3",
+    "@tensorflow-models/posenet": "^2.2.2",
+    "@tensorflow/tfjs": "^3.8.0",
+    "mindrawingjs": "^1.2.3",
     "three": "^0.130.1"
   }
 }
