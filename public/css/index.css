@@ -3,11 +3,12 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-div#score-overlay {
+div#stats-overlay {
   position: absolute;
   right: 0;
   top: 0;
   font-size: 2em;
+  text-align: right;
 }
 
 div#menu-overlay {

@@ -13,7 +13,9 @@ const VIDEO_SIZE = {
 const MIRROR_CAMERA = true
 
 export class PoseDetection {
-  constructor() {
+  constructor(stats = null) {
+    this.stats = stats
+
     this.d = canvasSetup()
     this.video = null
 
@@ -22,6 +24,10 @@ export class PoseDetection {
     // is async, but sets a flag once it is done
     this.cameraSetup()
     this.posenetSetup()
+
+    this.lasttime = performance.now()
+    this.framerate = 0
+    this.poses = []
   }
 
   async cameraSetup() {
@@ -59,7 +65,7 @@ export class PoseDetection {
     }
 
     if (this.posenetReady && this.videoReady) {
-      const poses = await this.posenet.estimatePoses(this.video, {
+      this.poses = await this.posenet.estimatePoses(this.video, {
         flipHorizontal: true,
         decodingMethod: 'multi-person',
         maxDetections: 5,
@@ -67,6 +73,13 @@ export class PoseDetection {
         nmsRadius: 30
       })
 
+      const t = performance.now()
+      this.framerate = t - this.lasttime
+      this.lasttime = t
+      if (this.stats !== null) {
+        this.stats.setStat('poseFPS', 1000/this.framerate)
+        // lg(1000/this.framerate)
+      }
       // lg(poses)
     }
   }

@@ -1179,7 +1179,7 @@
             me.i = i + 1 & 7;
             return v;
           };
-          function init2(me2, seed2) {
+          function init(me2, seed2) {
             var j, w, X = [];
             if (seed2 === (seed2 | 0)) {
               w = X[0] = seed2;
@@ -1203,7 +1203,7 @@
               me2.next();
             }
           }
-          init2(me, seed);
+          init(me, seed);
         }
         function copy(f, t) {
           t.x = f.x.slice();
@@ -1265,7 +1265,7 @@
             me.i = i;
             return v + (w ^ w >>> 16) | 0;
           };
-          function init2(me2, seed2) {
+          function init(me2, seed2) {
             var t, v, i, j, w, X = [], limit = 128;
             if (seed2 === (seed2 | 0)) {
               v = seed2;
@@ -1307,7 +1307,7 @@
             me2.X = X;
             me2.i = i;
           }
-          init2(me, seed);
+          init(me, seed);
         }
         function copy(f, t) {
           t.i = f.i;
@@ -12049,7 +12049,7 @@
     const transmissive = [];
     const transparent = [];
     const defaultProgram = { id: -1 };
-    function init2() {
+    function init() {
       renderItemsIndex = 0;
       opaque.length = 0;
       transmissive.length = 0;
@@ -12130,7 +12130,7 @@
       opaque,
       transmissive,
       transparent,
-      init: init2,
+      init,
       push,
       unshift,
       finish,
@@ -12511,7 +12511,7 @@
     const lights = new WebGLLights(extensions, capabilities);
     const lightsArray = [];
     const shadowsArray = [];
-    function init2() {
+    function init() {
       lightsArray.length = 0;
       shadowsArray.length = 0;
     }
@@ -12533,7 +12533,7 @@
       lights
     };
     return {
-      init: init2,
+      init,
       state: state2,
       setupLights,
       setupLightsView,
@@ -17776,7 +17776,7 @@
   ArcCurve.prototype.isArcCurve = true;
   function CubicPoly() {
     let c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-    function init2(x0, x1, t0, t1) {
+    function init(x0, x1, t0, t1) {
       c0 = x0;
       c1 = t0;
       c2 = -3 * x0 + 3 * x1 - 2 * t0 - t1;
@@ -17784,14 +17784,14 @@
     }
     return {
       initCatmullRom: function(x0, x1, x2, x3, tension) {
-        init2(x1, x2, tension * (x2 - x0), tension * (x3 - x1));
+        init(x1, x2, tension * (x2 - x0), tension * (x3 - x1));
       },
       initNonuniformCatmullRom: function(x0, x1, x2, x3, dt0, dt1, dt2) {
         let t1 = (x1 - x0) / dt0 - (x2 - x0) / (dt0 + dt1) + (x2 - x1) / dt1;
         let t2 = (x2 - x1) / dt1 - (x3 - x1) / (dt1 + dt2) + (x3 - x2) / dt2;
         t1 *= dt1;
         t2 *= dt1;
-        init2(x1, x2, t1, t2);
+        init(x1, x2, t1, t2);
       },
       calc: function(t) {
         const t2 = t * t;
@@ -28291,27 +28291,88 @@
     }
   };
 
-  // src/score.js
-  var Score = class {
+  // src/stats.js
+  var Stats2 = class {
     constructor() {
-      this.dom = document.getElementById("score-overlay");
-      this.score = 0;
+      this.all = {};
+    }
+    addStat(label, opts) {
+      this.all[label] = new SingleStat(label, opts);
+    }
+    setStat(label, val) {
+      const s = this.all[label];
+      s.setVal(val);
     }
     update() {
-      this.dom.innerHTML = `Score: ${this.score}`;
+      for (const i of Object.values(this.all)) {
+        i.update();
+      }
+    }
+  };
+  var SingleStat = class {
+    constructor(label, opts = {}) {
+      this.prettyLabel = opts.prettyLabel !== void 0 ? opts.prettyLabel : label;
+      this.label = `stat-${label}`;
+      const parent = document.getElementById("stats-overlay");
+      const newdiv = document.createElement("div");
+      newdiv.setAttribute("id", label);
+      parent.appendChild(newdiv);
+      this.dom = document.getElementById(label);
+      this.val = 0;
+      this.fixed = null;
+      this.smoothing = null;
+      if (opts.fixed !== void 0)
+        this.fixed = opts.fixed;
+      if (opts.smoothing !== void 0)
+        this.smoothing = opts.smoothing;
+    }
+    setVal(val) {
+      if (!isFinite(val))
+        return;
+      if (this.smoothing !== null) {
+        this.val = this.val * this.smoothing + val * (1 - this.smoothing);
+        return;
+      }
+      this.val = val;
+    }
+    update() {
+      let out = this.val;
+      if (this.fixed !== null) {
+        out = this.val.toFixed(this.fixed);
+      }
+      this.dom.innerHTML = `${this.prettyLabel}: ${out}`;
     }
   };
 
   // src/ui.js
   var MENU_ID = "menu-overlay";
   var PLAY_ID = "play-button";
-  var hideMenu = () => {
-    document.getElementById(MENU_ID).style.visibility = "hidden";
-  };
-  var init = () => {
-    document.getElementById(PLAY_ID).addEventListener("click", () => {
-      hideMenu();
-    });
+  var UI = class {
+    constructor() {
+      document.getElementById(PLAY_ID).addEventListener("click", () => {
+        this.hideMenu();
+      });
+      this.stats = new Stats2();
+      this.stats.addStat("score");
+      this.stats.addStat("poseFPS", {
+        smoothing: 0.5,
+        fixed: 2,
+        prettyLabel: "Pose FPS"
+      });
+      this.stats.addStat("FPS", {
+        smoothing: 0.5,
+        fixed: 2
+      });
+    }
+    hideMenu() {
+      document.getElementById(MENU_ID).style.visibility = "hidden";
+    }
+    showMenu() {
+      document.getElementById(MENU_ID).style.visibility = "visible";
+    }
+    update() {
+      this.stats.update();
+    }
   };
 
   // src/posedetection.js
@@ -29434,12 +29495,12 @@
     }
     return ns._tfGlobals;
   }
-  function getGlobal(key, init2) {
+  function getGlobal(key, init) {
     const globalMap = getGlobalMap();
     if (globalMap.has(key)) {
       return globalMap.get(key);
     } else {
-      const singleton = init2();
+      const singleton = init();
       globalMap.set(key, singleton);
       return globalMap.get(key);
     }
@@ -32362,8 +32423,8 @@
 
   // node_modules/@tensorflow/tfjs-core/dist/platforms/platform_browser.js
   var PlatformBrowser = class {
-    fetch(path, init2) {
-      return fetch(path, init2);
+    fetch(path, init) {
+      return fetch(path, init);
     }
     now() {
       return performance.now();
@@ -32817,18 +32878,18 @@ Manifest JSON has weights with names: ${allManifestWeightNames.join(", ")}.`);
       if (modelArtifacts.modelTopology instanceof ArrayBuffer) {
         throw new Error("BrowserHTTPRequest.save() does not support saving model topology in binary formats yet.");
       }
-      const init2 = Object.assign({ method: this.DEFAULT_METHOD }, this.requestInit);
-      init2.body = new FormData();
+      const init = Object.assign({ method: this.DEFAULT_METHOD }, this.requestInit);
+      init.body = new FormData();
       const weightsManifest = [{
         paths: ["./model.weights.bin"],
         weights: modelArtifacts.weightSpecs
       }];
       const modelTopologyAndWeightManifest = getModelJSONForModelArtifacts(modelArtifacts, weightsManifest);
-      init2.body.append("model.json", new Blob([JSON.stringify(modelTopologyAndWeightManifest)], { type: JSON_TYPE }), "model.json");
+      init.body.append("model.json", new Blob([JSON.stringify(modelTopologyAndWeightManifest)], { type: JSON_TYPE }), "model.json");
       if (modelArtifacts.weightData != null) {
-        init2.body.append("model.weights.bin", new Blob([modelArtifacts.weightData], { type: OCTET_STREAM_MIME_TYPE }), "model.weights.bin");
+        init.body.append("model.weights.bin", new Blob([modelArtifacts.weightData], { type: OCTET_STREAM_MIME_TYPE }), "model.weights.bin");
       }
-      const response = await this.fetch(this.path, init2);
+      const response = await this.fetch(this.path, init);
       if (response.ok) {
         return {
           modelArtifactsInfo: getModelArtifactsInfoForJSON(modelArtifacts),
@@ -50447,13 +50508,13 @@ Expected: ${expectedFlat}.`);
       if (this.useBias) {
         let biasInitializer;
         if (this.unitForgetBias) {
-          const init2 = this.biasInitializer;
+          const init = this.biasInitializer;
           const filters = this.filters;
           biasInitializer = new (_a = class CustomInit extends Initializer {
             apply(shape, dtype) {
-              const biasI = init2.apply([filters]);
+              const biasI = init.apply([filters]);
               const biasF = ones2([filters]);
-              const biasCAndO = init2.apply([filters * 2]);
+              const biasCAndO = init.apply([filters * 2]);
               return concatenate([biasI, biasF, biasCAndO]);
             }
           }, _a.className = "CustomInit", _a)();
@@ -80861,13 +80922,17 @@ return a / b;`;
   };
   var MIRROR_CAMERA = true;
   var PoseDetection = class {
-    constructor() {
+    constructor(stats = null) {
+      this.stats = stats;
       this.d = canvasSetup();
       this.video = null;
       this.videoReady = false;
       this.posenetReady = false;
       this.cameraSetup();
       this.posenetSetup();
+      this.lasttime = performance.now();
+      this.framerate = 0;
+      this.poses = [];
     }
     async cameraSetup() {
       this.video = await cameraSetup();
@@ -80891,13 +80956,19 @@ return a / b;`;
         ctx.drawImage(this.video, 0, 0, this.d.width, this.d.height);
       }
       if (this.posenetReady && this.videoReady) {
-        const poses = await this.posenet.estimatePoses(this.video, {
+        this.poses = await this.posenet.estimatePoses(this.video, {
           flipHorizontal: true,
           decodingMethod: "multi-person",
           maxDetections: 5,
           scoreThreshold: 0.1,
           nmsRadius: 30
         });
+        const t = performance.now();
+        this.framerate = t - this.lasttime;
+        this.lasttime = t;
+        if (this.stats !== null) {
+          this.stats.setStat("poseFPS", 1e3 / this.framerate);
+        }
       }
     }
   };
@@ -80949,22 +81020,24 @@ return a / b;`;
   var ORBIT_CAM = false;
   (async () => {
     lg5("Started...");
-    init();
-    hideMenu();
-    const pose = new PoseDetection();
+    const ui = new UI();
+    ui.hideMenu();
+    const pose = new PoseDetection(ui.stats);
     const { scene, camera, renderer, stats } = setup(ORBIT_CAM);
     setup2();
     const floor4 = addFloor(scene);
     const bird = await newBird(scene);
     const pillars = new Pillars(scene);
     const collisions = new Collisions(bird, pillars);
-    const score = new Score();
     setup4(scene);
     setup3(camera, bird.obj);
+    let score = 0;
     let prevtime = 0;
     const animate = (time2) => {
+      stats.begin();
       const deltaTime = time2 - prevtime;
       prevtime = time2;
+      ui.stats.setStat("FPS", 1e3 / deltaTime);
       if (isNaN(deltaTime)) {
         requestAnimationFrame(animate);
         return;
@@ -80977,14 +81050,14 @@ return a / b;`;
       camera.tick();
       if (collisions.tick()) {
         lg5("Crashed!!");
-        score.score += 1;
+        score += 1;
+        ui.stats.setStat("score", score);
       }
-      requestAnimationFrame(animate);
-      stats.begin();
-      renderer.render(scene, camera);
-      score.update();
       pose.update();
+      renderer.render(scene, camera);
+      ui.update();
       stats.end();
+      requestAnimationFrame(animate);
     };
     animate();
   })();

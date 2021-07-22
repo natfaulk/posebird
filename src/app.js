@@ -9,8 +9,7 @@ import * as Camera from './camera'
 import * as Lighting from './lighting'
 import * as CONSTS from './constants'
 import {Collisions} from './collisions'
-import {Score} from './score'
-import * as UI from './ui'
+import {UI} from './ui'
 import {PoseDetection} from './posedetection'
 
 const lg = makeLogger('App')
@@ -21,10 +20,10 @@ const ORBIT_CAM = false
   lg('Started...')
 
   // just hide menu for now...
-  UI.init()
-  UI.hideMenu()
+  const ui = new UI
+  ui.hideMenu()
 
-  const pose = new PoseDetection()
+  const pose = new PoseDetection(ui.stats)
   
   const {scene, camera, renderer, stats} = Scene.setup(ORBIT_CAM)
   
@@ -34,23 +33,25 @@ const ORBIT_CAM = false
   const bird = await newBird(scene)
   const pillars = new Pillars(scene)
   const collisions = new Collisions(bird, pillars)
-  const score = new Score
   
   Lighting.setup(scene)
-
+  
   // performs setup and adds custom tick method to camera
   Camera.setup(camera, bird.obj)
-
+  
+  let score = 0
   let prevtime = 0
   const animate = time => {
+    stats.begin()
     const deltaTime = time-prevtime
     prevtime = time
+    ui.stats.setStat('FPS', 1000/(deltaTime))
     // lg(`Time: ${time}, Delta time: ${deltaTime}`)
     if (isNaN(deltaTime)) {
       requestAnimationFrame(animate)
       return
     }
-
+    
     floor.position.z += CONSTS.PILLAR_SPEED * (deltaTime / 1000)
     while (floor.position.z > 0) floor.position.z -= 1
     pillars.tick(time, deltaTime)
@@ -60,15 +61,16 @@ const ORBIT_CAM = false
 
     if (collisions.tick()) {
       lg('Crashed!!')
-      score.score += 1
+      score += 1
+      ui.stats.setStat('score', score)
     }
 
-    requestAnimationFrame(animate)
-    stats.begin()
-    renderer.render(scene, camera)
-    score.update()
     pose.update()
+    renderer.render(scene, camera)
+    ui.update()
     stats.end()
+    
+    requestAnimationFrame(animate)
   }
   animate()
 
