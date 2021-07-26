@@ -1588,14 +1588,6 @@
   var import_supersimplelogger6 = __toModule(require_src());
 
   // src/keyboard.js
-  var keyboard_exports = {};
-  __export(keyboard_exports, {
-    down: () => down,
-    left: () => left,
-    right: () => right,
-    setup: () => setup,
-    up: () => up
-  });
   var state = {
     up: false,
     down: false,
@@ -1632,11 +1624,17 @@
   var down = () => {
     return state.down;
   };
-  var left = () => {
-    return state.left;
+
+  // src/utils.js
+  var clamp = (val, min5, max5) => {
+    if (val >= max5)
+      return max5;
+    if (val <= min5)
+      return min5;
+    return val;
   };
-  var right = () => {
-    return state.right;
+  var smooth = (newV, oldV, f) => {
+    return oldV * f + newV * (1 - f);
   };
 
   // src/stats.js
@@ -1678,7 +1676,7 @@
       if (!isFinite(val))
         return;
       if (this.smoothing !== null) {
-        this.val = this.val * this.smoothing + val * (1 - this.smoothing);
+        this.val = smooth(val, this.val, this.smoothing);
         return;
       }
       this.val = val;
@@ -1747,6 +1745,7 @@
   var BIRD_INIT_POS_X = CAMERA_POS_X + CAMERA_BIRD_OFFSET_X;
   var BIRD_INIT_POS_Y = CAMERA_POS_Y + CAMERA_BIRD_OFFSET_Y;
   var BIRD_INIT_POS_Z = CAMERA_POS_Z + CAMERA_BIRD_OFFSET_Z;
+  var BIRD_MAX_SPEED_X = 5;
   var PILLAR_SPEED = 1.2;
   var PILLAR_SPACING = 2;
   var SHOW_BOUNDING_BOXES = false;
@@ -2478,16 +2477,16 @@
       swap(array22, counter, index);
     }
   }
-  function clamp(min5, x, max5) {
+  function clamp2(min5, x, max5) {
     return Math.max(min5, Math.min(x, max5));
   }
   function nearestLargerEven(val) {
     return val % 2 === 0 ? val : val + 1;
   }
-  function swap(object, left2, right2) {
-    const temp = object[left2];
-    object[left2] = object[right2];
-    object[right2] = temp;
+  function swap(object, left, right) {
+    const temp = object[left];
+    object[left] = object[right];
+    object[right] = temp;
   }
   function sum(arr) {
     let sum5 = 0;
@@ -3304,7 +3303,7 @@
     bytesFromStringArray: () => bytesFromStringArray,
     bytesPerElement: () => bytesPerElement,
     checkConversionForErrors: () => checkConversionForErrors,
-    clamp: () => clamp,
+    clamp: () => clamp2,
     computeStrides: () => computeStrides,
     createScalarValue: () => createScalarValue,
     createShuffledIndices: () => createShuffledIndices,
@@ -7083,7 +7082,7 @@ Manifest JSON has weights with names: ${allManifestWeightNames.join(", ")}.`);
       if (newIndices[i] < 0) {
         newIndices[i] += axisSize;
       }
-      newIndices[i] = clamp(0, newIndices[i], inputShape[i]);
+      newIndices[i] = clamp2(0, newIndices[i], inputShape[i]);
     }
     return newIndices;
   }
@@ -7108,7 +7107,7 @@ Manifest JSON has weights with names: ${allManifestWeightNames.join(", ")}.`);
     if (start < 0) {
       start += axisSize;
     }
-    start = clamp(0, start, axisSize - 1);
+    start = clamp2(0, start, axisSize - 1);
     return start;
   }
   function stopForAxis(endMask, stopIndices, strides, inputShape, axis, ellipsisMask) {
@@ -7126,9 +7125,9 @@ Manifest JSON has weights with names: ${allManifestWeightNames.join(", ")}.`);
       stop += axisSize;
     }
     if (stride > 0) {
-      stop = clamp(0, stop, axisSize);
+      stop = clamp2(0, stop, axisSize);
     } else {
-      stop = clamp(-1, stop, axisSize - 1);
+      stop = clamp2(-1, stop, axisSize - 1);
     }
     return stop;
   }
@@ -7812,9 +7811,9 @@ Expected: ${expectedFlat}.`);
       const padAlongWidth = Math.max(0, (outWidth - 1) * strideWidth + filterWidth - inWidth);
       const top = Math.floor(padAlongHeight / 2);
       const bottom = padAlongHeight - top;
-      const left2 = Math.floor(padAlongWidth / 2);
-      const right2 = padAlongWidth - left2;
-      padInfo = { top, bottom, left: left2, right: right2, type: "SAME" };
+      const left = Math.floor(padAlongWidth / 2);
+      const right = padAlongWidth - left;
+      padInfo = { top, bottom, left, right, type: "SAME" };
     } else if (pad2 === "valid") {
       padInfo = { top: 0, bottom: 0, left: 0, right: 0, type: "VALID" };
       outHeight = Math.ceil((inHeight - filterHeight + 1) / strideHeight);
@@ -7822,12 +7821,12 @@ Expected: ${expectedFlat}.`);
     } else if (typeof pad2 === "object") {
       const top = dataFormat === "channelsLast" ? pad2[1][0] : pad2[2][0];
       const bottom = dataFormat === "channelsLast" ? pad2[1][1] : pad2[2][1];
-      const left2 = dataFormat === "channelsLast" ? pad2[2][0] : pad2[3][0];
-      const right2 = dataFormat === "channelsLast" ? pad2[2][1] : pad2[3][1];
-      const padType = top === 0 && bottom === 0 && left2 === 0 && right2 === 0 ? "VALID" : "EXPLICIT";
-      padInfo = { top, bottom, left: left2, right: right2, type: padType };
+      const left = dataFormat === "channelsLast" ? pad2[2][0] : pad2[3][0];
+      const right = dataFormat === "channelsLast" ? pad2[2][1] : pad2[3][1];
+      const padType = top === 0 && bottom === 0 && left === 0 && right === 0 ? "VALID" : "EXPLICIT";
+      padInfo = { top, bottom, left, right, type: padType };
       outHeight = round((inHeight - filterHeight + top + bottom) / strideHeight + 1, roundingMode);
-      outWidth = round((inWidth - filterWidth + left2 + right2) / strideWidth + 1, roundingMode);
+      outWidth = round((inWidth - filterWidth + left + right) / strideWidth + 1, roundingMode);
     } else {
       throw Error(`Unknown padding parameter: ${pad2}`);
     }
@@ -7864,9 +7863,9 @@ Expected: ${expectedFlat}.`);
       const back = padAlongDepth - front;
       const top = Math.floor(padAlongHeight / 2);
       const bottom = padAlongHeight - top;
-      const left2 = Math.floor(padAlongWidth / 2);
-      const right2 = padAlongWidth - left2;
-      padInfo = { top, bottom, left: left2, right: right2, front, back, type: "SAME" };
+      const left = Math.floor(padAlongWidth / 2);
+      const right = padAlongWidth - left;
+      padInfo = { top, bottom, left, right, front, back, type: "SAME" };
     } else if (pad2 === "valid") {
       padInfo = {
         top: 0,
@@ -11222,21 +11221,21 @@ Expected: ${expectedFlat}.`);
     return a > b ? 1 : a < b ? -1 : 0;
   }
   function binarySearch_(arr, target, comparator) {
-    let left2 = 0;
-    let right2 = arr.length;
+    let left = 0;
+    let right = arr.length;
     let middle = 0;
     let found = false;
-    while (left2 < right2) {
-      middle = left2 + (right2 - left2 >>> 1);
+    while (left < right) {
+      middle = left + (right - left >>> 1);
       const compareResult = comparator(target, arr[middle]);
       if (compareResult > 0) {
-        left2 = middle + 1;
+        left = middle + 1;
       } else {
-        right2 = middle;
+        right = middle;
         found = !compareResult;
       }
     }
-    return found ? left2 : -left2 - 1;
+    return found ? left : -left - 1;
   }
 
   // node_modules/@tensorflow/tfjs-core/dist/backends/non_max_suppression_impl.js
@@ -34906,24 +34905,24 @@ Expected: ${expectedFlat}.`);
     const valueDiff = b.value - a.value;
     return valueDiff === 0 ? a.index - b.index : valueDiff;
   };
-  function select(array2, k, left2 = 0, right2 = array2.length - 1) {
-    while (right2 > left2) {
-      if (right2 - left2 > 600) {
-        const n = right2 - left2 + 1;
-        const i2 = k - left2 + 1;
+  function select(array2, k, left = 0, right = array2.length - 1) {
+    while (right > left) {
+      if (right - left > 600) {
+        const n = right - left + 1;
+        const i2 = k - left + 1;
         const z = Math.log(n);
         const s = 0.5 * Math.exp(2 * z / 3);
         const sd = 0.5 * Math.sqrt(z * s * (n - s) / n) * Math.sign(i2 - n / 2);
-        const newLeft = Math.max(left2, Math.floor(k - i2 * s / n + sd));
-        const newRight = Math.min(right2, Math.floor(k + (n - i2) * s / n + sd));
+        const newLeft = Math.max(left, Math.floor(k - i2 * s / n + sd));
+        const newRight = Math.min(right, Math.floor(k + (n - i2) * s / n + sd));
         select(array2, k, newLeft, newRight);
       }
       const t = array2[k];
-      let i = left2;
-      let j = right2;
-      util_exports.swap(array2, left2, k);
-      if (comparePair(array2[right2], t) > 0) {
-        util_exports.swap(array2, left2, right2);
+      let i = left;
+      let j = right;
+      util_exports.swap(array2, left, k);
+      if (comparePair(array2[right], t) > 0) {
+        util_exports.swap(array2, left, right);
       }
       while (i < j) {
         util_exports.swap(array2, i, j);
@@ -34936,17 +34935,17 @@ Expected: ${expectedFlat}.`);
           j = j - 1;
         }
       }
-      if (comparePair(array2[left2], t) === 0) {
-        util_exports.swap(array2, left2, j);
+      if (comparePair(array2[left], t) === 0) {
+        util_exports.swap(array2, left, j);
       } else {
         j = j + 1;
-        util_exports.swap(array2, j, right2);
+        util_exports.swap(array2, j, right);
       }
       if (j <= k) {
-        left2 = j + 1;
+        left = j + 1;
       }
       if (k <= j) {
-        right2 = j - 1;
+        right = j - 1;
       }
     }
   }
@@ -47681,7 +47680,7 @@ return (log(1.0 + x) - log(1.0 - x)) / 2.0;`;
       this.packedOutput = true;
       this.outputShape = outputShape;
       const { filterWidth, inChannels, strideWidth, strideHeight, padInfo, outWidth, dilationWidth, dilationHeight, dataFormat } = convInfo;
-      const { left: left2, top } = padInfo;
+      const { left, top } = padInfo;
       const itemsPerBlockRow = inChannels * filterWidth;
       const glsl = getGlslDifferences();
       const isChannelsLast = dataFormat === "channelsLast";
@@ -47700,7 +47699,7 @@ return (log(1.0 + x) - log(1.0 - x)) / 2.0;`;
 
             if(d0 < ${inputShape[rowDim]} && d0 >= 0) {
 
-              offsetX = int(mod(float(blockIndex), ${outWidth}.) * ${strideWidth}. - ${left2}.);
+              offsetX = int(mod(float(blockIndex), ${outWidth}.) * ${strideWidth}. - ${left}.);
               d1 = offsetX + ${dilationWidth} * (int(mod(float(pos), ${itemsPerBlockRow}.) / ${inChannels}.));
 
               if(d1 < ${inputShape[colDim]} && d1 >= 0) {
@@ -54118,7 +54117,7 @@ return a / b;`;
     var r = getOffsetPoint(e.heatmapY, e.heatmapX, e.id, n), o = r.y, i = r.x;
     return { x: e.heatmapX * t + i, y: e.heatmapY * t + o };
   }
-  function clamp2(e, t, n) {
+  function clamp3(e, t, n) {
     return e < t ? t : e > n ? n : e;
   }
   function squaredDistance(e, t, n, r) {
@@ -54143,7 +54142,7 @@ return a / b;`;
     return { y: n.get(t.y, t.x, e), x: n.get(t.y, t.x, r + e) };
   }
   function getStridedIndexNearPoint(e, t, n, r) {
-    return { y: clamp2(Math.round(e.y / t), 0, n - 1), x: clamp2(Math.round(e.x / t), 0, r - 1) };
+    return { y: clamp3(Math.round(e.y / t), 0, n - 1), x: clamp3(Math.round(e.x / t), 0, r - 1) };
   }
   function traverseToTargetKeypoint(e, t, n, r, o, i, s, u) {
     u === void 0 && (u = 2);
@@ -54814,7 +54813,7 @@ return a / b;`;
     const uuid = _lut[d0 & 255] + _lut[d0 >> 8 & 255] + _lut[d0 >> 16 & 255] + _lut[d0 >> 24 & 255] + "-" + _lut[d1 & 255] + _lut[d1 >> 8 & 255] + "-" + _lut[d1 >> 16 & 15 | 64] + _lut[d1 >> 24 & 255] + "-" + _lut[d2 & 63 | 128] + _lut[d2 >> 8 & 255] + "-" + _lut[d2 >> 16 & 255] + _lut[d2 >> 24 & 255] + _lut[d3 & 255] + _lut[d3 >> 8 & 255] + _lut[d3 >> 16 & 255] + _lut[d3 >> 24 & 255];
     return uuid.toUpperCase();
   }
-  function clamp3(value, min5, max5) {
+  function clamp4(value, min5, max5) {
     return Math.max(min5, Math.min(max5, value));
   }
   function euclideanModulo(n, m) {
@@ -54924,7 +54923,7 @@ return a / b;`;
     DEG2RAD,
     RAD2DEG,
     generateUUID,
-    clamp: clamp3,
+    clamp: clamp4,
     euclideanModulo,
     mapLinear,
     inverseLerp,
@@ -56390,7 +56389,7 @@ return a / b;`;
       return this.normalize();
     }
     angleTo(q) {
-      return 2 * Math.acos(Math.abs(clamp3(this.dot(q), -1, 1)));
+      return 2 * Math.acos(Math.abs(clamp4(this.dot(q), -1, 1)));
     }
     rotateTowards(q, step4) {
       const angle = this.angleTo(q);
@@ -56866,7 +56865,7 @@ return a / b;`;
       if (denominator === 0)
         return Math.PI / 2;
       const theta = this.dot(v) / denominator;
-      return Math.acos(clamp3(theta, -1, 1));
+      return Math.acos(clamp4(theta, -1, 1));
     }
     distanceTo(v) {
       return Math.sqrt(this.distanceToSquared(v));
@@ -58104,14 +58103,14 @@ return a / b;`;
       scale2.z = sz;
       return this;
     }
-    makePerspective(left2, right2, top, bottom, near, far) {
+    makePerspective(left, right, top, bottom, near, far) {
       if (far === void 0) {
         console.warn("THREE.Matrix4: .makePerspective() has been redefined and has a new signature. Please check the docs.");
       }
       const te = this.elements;
-      const x = 2 * near / (right2 - left2);
+      const x = 2 * near / (right - left);
       const y = 2 * near / (top - bottom);
-      const a = (right2 + left2) / (right2 - left2);
+      const a = (right + left) / (right - left);
       const b = (top + bottom) / (top - bottom);
       const c = -(far + near) / (far - near);
       const d = -2 * far * near / (far - near);
@@ -58133,12 +58132,12 @@ return a / b;`;
       te[15] = 0;
       return this;
     }
-    makeOrthographic(left2, right2, top, bottom, near, far) {
+    makeOrthographic(left, right, top, bottom, near, far) {
       const te = this.elements;
-      const w = 1 / (right2 - left2);
+      const w = 1 / (right - left);
       const h = 1 / (top - bottom);
       const p2 = 1 / (far - near);
-      const x = (right2 + left2) * w;
+      const x = (right + left) * w;
       const y = (top + bottom) * h;
       const z = (far + near) * p2;
       te[0] = 2 * w;
@@ -58266,7 +58265,7 @@ return a / b;`;
       const m31 = te[2], m32 = te[6], m33 = te[10];
       switch (order) {
         case "XYZ":
-          this._y = Math.asin(clamp3(m13, -1, 1));
+          this._y = Math.asin(clamp4(m13, -1, 1));
           if (Math.abs(m13) < 0.9999999) {
             this._x = Math.atan2(-m23, m33);
             this._z = Math.atan2(-m12, m11);
@@ -58276,7 +58275,7 @@ return a / b;`;
           }
           break;
         case "YXZ":
-          this._x = Math.asin(-clamp3(m23, -1, 1));
+          this._x = Math.asin(-clamp4(m23, -1, 1));
           if (Math.abs(m23) < 0.9999999) {
             this._y = Math.atan2(m13, m33);
             this._z = Math.atan2(m21, m22);
@@ -58286,7 +58285,7 @@ return a / b;`;
           }
           break;
         case "ZXY":
-          this._x = Math.asin(clamp3(m32, -1, 1));
+          this._x = Math.asin(clamp4(m32, -1, 1));
           if (Math.abs(m32) < 0.9999999) {
             this._y = Math.atan2(-m31, m33);
             this._z = Math.atan2(-m12, m22);
@@ -58296,7 +58295,7 @@ return a / b;`;
           }
           break;
         case "ZYX":
-          this._y = Math.asin(-clamp3(m31, -1, 1));
+          this._y = Math.asin(-clamp4(m31, -1, 1));
           if (Math.abs(m31) < 0.9999999) {
             this._x = Math.atan2(m32, m33);
             this._z = Math.atan2(m21, m11);
@@ -58306,7 +58305,7 @@ return a / b;`;
           }
           break;
         case "YZX":
-          this._z = Math.asin(clamp3(m21, -1, 1));
+          this._z = Math.asin(clamp4(m21, -1, 1));
           if (Math.abs(m21) < 0.9999999) {
             this._x = Math.atan2(-m23, m22);
             this._y = Math.atan2(-m31, m11);
@@ -58316,7 +58315,7 @@ return a / b;`;
           }
           break;
         case "XZY":
-          this._z = Math.asin(-clamp3(m12, -1, 1));
+          this._z = Math.asin(-clamp4(m12, -1, 1));
           if (Math.abs(m12) < 0.9999999) {
             this._x = Math.atan2(m32, m22);
             this._y = Math.atan2(m13, m11);
@@ -59633,8 +59632,8 @@ return a / b;`;
     }
     setHSL(h, s, l) {
       h = euclideanModulo(h, 1);
-      s = clamp3(s, 0, 1);
-      l = clamp3(l, 0, 1);
+      s = clamp4(s, 0, 1);
+      l = clamp4(l, 0, 1);
       if (s === 0) {
         this.r = this.g = this.b = l;
       } else {
@@ -61370,19 +61369,19 @@ return a / b;`;
       let top = near * Math.tan(DEG2RAD * 0.5 * this.fov) / this.zoom;
       let height = 2 * top;
       let width = this.aspect * height;
-      let left2 = -0.5 * width;
+      let left = -0.5 * width;
       const view = this.view;
       if (this.view !== null && this.view.enabled) {
         const fullWidth = view.fullWidth, fullHeight = view.fullHeight;
-        left2 += view.offsetX * width / fullWidth;
+        left += view.offsetX * width / fullWidth;
         top -= view.offsetY * height / fullHeight;
         width *= view.width / fullWidth;
         height *= view.height / fullHeight;
       }
       const skew = this.filmOffset;
       if (skew !== 0)
-        left2 += near * skew / this.getFilmWidth();
-      this.projectionMatrix.makePerspective(left2, left2 + width, top, top - height, near, this.far);
+        left += near * skew / this.getFilmWidth();
+      this.projectionMatrix.makePerspective(left, left + width, top, top - height, near, this.far);
       this.projectionMatrixInverse.copy(this.projectionMatrix).invert();
     }
     toJSON(meta) {
@@ -67692,8 +67691,8 @@ return a / b;`;
         const bottomFov = (projL[9] - 1) / projL[5];
         const leftFov = (projL[8] - 1) / projL[0];
         const rightFov = (projR[8] + 1) / projR[0];
-        const left2 = near * leftFov;
-        const right2 = near * rightFov;
+        const left = near * leftFov;
+        const right = near * rightFov;
         const zOffset = ipd / (-leftFov + rightFov);
         const xOffset = zOffset * -leftFov;
         cameraL2.matrixWorld.decompose(camera.position, camera.quaternion, camera.scale);
@@ -67703,11 +67702,11 @@ return a / b;`;
         camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
         const near2 = near + zOffset;
         const far2 = far + zOffset;
-        const left22 = left2 - xOffset;
-        const right22 = right2 + (ipd - xOffset);
+        const left2 = left - xOffset;
+        const right2 = right + (ipd - xOffset);
         const top2 = topFov * far / far2 * near2;
         const bottom2 = bottomFov * far / far2 * near2;
-        camera.projectionMatrix.makePerspective(left22, right22, top2, bottom2, near2, far2);
+        camera.projectionMatrix.makePerspective(left2, right2, top2, bottom2, near2, far2);
       }
       function updateCamera(camera, parent) {
         if (parent === null) {
@@ -70633,13 +70632,13 @@ return a / b;`;
         vec.crossVectors(tangents[i - 1], tangents[i]);
         if (vec.length() > Number.EPSILON) {
           vec.normalize();
-          const theta = Math.acos(clamp3(tangents[i - 1].dot(tangents[i]), -1, 1));
+          const theta = Math.acos(clamp4(tangents[i - 1].dot(tangents[i]), -1, 1));
           normals[i].applyMatrix4(mat.makeRotationAxis(vec, theta));
         }
         binormals[i].crossVectors(tangents[i], normals[i]);
       }
       if (closed === true) {
-        let theta = Math.acos(clamp3(normals[0].dot(normals[segments]), -1, 1));
+        let theta = Math.acos(clamp4(normals[0].dot(normals[segments]), -1, 1));
         theta /= segments;
         if (tangents[0].dot(vec.crossVectors(normals[0], normals[segments])) > 0) {
           theta = -theta;
@@ -72314,7 +72313,7 @@ return a / b;`;
           return (1 + 0.4 * this.reflectivity) / (1 - 0.4 * this.reflectivity);
         },
         set: function(ior) {
-          this.reflectivity = clamp3(2.5 * (ior - 1) / (ior + 1), 0, 1);
+          this.reflectivity = clamp4(2.5 * (ior - 1) / (ior + 1), 0, 1);
         }
       });
       this.sheen = null;
@@ -72842,7 +72841,7 @@ return a / b;`;
       let i1 = this._cachedIndex, t1 = pp[i1], t0 = pp[i1 - 1];
       validate_interval: {
         seek: {
-          let right2;
+          let right;
           linear_scan: {
             forward_scan:
               if (!(t < t1)) {
@@ -72862,7 +72861,7 @@ return a / b;`;
                     break seek;
                   }
                 }
-                right2 = pp.length;
+                right = pp.length;
                 break linear_scan;
               }
             if (!(t >= t0)) {
@@ -72884,16 +72883,16 @@ return a / b;`;
                   break seek;
                 }
               }
-              right2 = i1;
+              right = i1;
               i1 = 0;
               break linear_scan;
             }
             break validate_interval;
           }
-          while (i1 < right2) {
-            const mid = i1 + right2 >>> 1;
+          while (i1 < right) {
+            const mid = i1 + right >>> 1;
             if (t < pp[mid]) {
-              right2 = mid;
+              right = mid;
             } else {
               i1 = mid + 1;
             }
@@ -74430,13 +74429,13 @@ return a / b;`;
   };
   PointLight.prototype.isPointLight = true;
   var OrthographicCamera = class extends Camera {
-    constructor(left2 = -1, right2 = 1, top = 1, bottom = -1, near = 0.1, far = 2e3) {
+    constructor(left = -1, right = 1, top = 1, bottom = -1, near = 0.1, far = 2e3) {
       super();
       this.type = "OrthographicCamera";
       this.zoom = 1;
       this.view = null;
-      this.left = left2;
-      this.right = right2;
+      this.left = left;
+      this.right = right;
       this.top = top;
       this.bottom = bottom;
       this.near = near;
@@ -74487,19 +74486,19 @@ return a / b;`;
       const dy = (this.top - this.bottom) / (2 * this.zoom);
       const cx = (this.right + this.left) / 2;
       const cy = (this.top + this.bottom) / 2;
-      let left2 = cx - dx;
-      let right2 = cx + dx;
+      let left = cx - dx;
+      let right = cx + dx;
       let top = cy + dy;
       let bottom = cy - dy;
       if (this.view !== null && this.view.enabled) {
         const scaleW = (this.right - this.left) / this.view.fullWidth / this.zoom;
         const scaleH = (this.top - this.bottom) / this.view.fullHeight / this.zoom;
-        left2 += scaleW * this.view.offsetX;
-        right2 = left2 + scaleW * this.view.width;
+        left += scaleW * this.view.offsetX;
+        right = left + scaleW * this.view.width;
         top -= scaleH * this.view.offsetY;
         bottom = top - scaleH * this.view.height;
       }
-      this.projectionMatrix.makeOrthographic(left2, right2, top, bottom, this.near, this.far);
+      this.projectionMatrix.makeOrthographic(left, right, top, bottom, this.near, this.far);
       this.projectionMatrixInverse.copy(this.projectionMatrix).invert();
     }
     toJSON(meta) {
@@ -76795,7 +76794,7 @@ return a / b;`;
         this.phi = 0;
       } else {
         this.theta = Math.atan2(x, z);
-        this.phi = Math.acos(clamp3(y / this.radius, -1, 1));
+        this.phi = Math.acos(clamp4(y / this.radius, -1, 1));
       }
       return this;
     }
@@ -76942,7 +76941,7 @@ return a / b;`;
       const startEnd_startP = _startEnd.dot(_startP);
       let t = startEnd_startP / startEnd2;
       if (clampToLine) {
-        t = clamp3(t, 0, 1);
+        t = clamp4(t, 0, 1);
       }
       return t;
     }
@@ -77331,9 +77330,9 @@ return a / b;`;
   Matrix4.prototype.applyToVector3Array = function() {
     console.error("THREE.Matrix4: .applyToVector3Array() has been removed.");
   };
-  Matrix4.prototype.makeFrustum = function(left2, right2, bottom, top, near, far) {
+  Matrix4.prototype.makeFrustum = function(left, right, bottom, top, near, far) {
     console.warn("THREE.Matrix4: .makeFrustum() has been removed. Use .makePerspective( left, right, top, bottom, near, far ) instead.");
-    return this.makePerspective(left2, right2, top, bottom, near, far);
+    return this.makePerspective(left, right, top, bottom, near, far);
   };
   Matrix4.prototype.getInverse = function(matrix) {
     console.warn("THREE.Matrix4: .getInverse() has been removed. Use matrixInv.copy( matrix ).invert(); instead.");
@@ -81133,28 +81132,20 @@ return a / b;`;
       this.bbHelper = null;
       this.bb = null;
     }
-    tick(keyboard) {
-      if (keyboard.up() && !keyboard.down()) {
+    tick(deltaTime, shoulderAngle) {
+      if (up() && !down()) {
         this.obj.position.y += 0.1;
         this.obj.rotation.x = MathUtils.degToRad(20);
-      } else if (keyboard.down() && !keyboard.up()) {
+      } else if (down() && !up()) {
         this.obj.position.y -= 0.1;
         this.obj.rotation.x = MathUtils.degToRad(-20);
       } else {
         this.obj.rotation.x = 0;
       }
-      if (keyboard.left() && !keyboard.right()) {
-        this.obj.rotation.z = MathUtils.degToRad(20);
-        this.obj.rotation.y = MathUtils.degToRad(5);
-        this.obj.position.x -= 0.1;
-      } else if (keyboard.right() && !keyboard.left()) {
-        this.obj.rotation.z = MathUtils.degToRad(-20);
-        this.obj.rotation.y = MathUtils.degToRad(-5);
-        this.obj.position.x += 0.1;
-      } else {
-        this.obj.rotation.z = 0;
-        this.obj.rotation.y = 0;
-      }
+      shoulderAngle = clamp(shoulderAngle, -0.3, 0.3);
+      const xspeed = shoulderAngle / 0.3 * BIRD_MAX_SPEED_X * (deltaTime / 1e3);
+      this.obj.position.x += xspeed;
+      this.obj.rotation.z = -2 * shoulderAngle;
       this.bbHelper.update();
       this.bbHelper.geometry.computeBoundingBox();
       this.bb.setFromObject(this.bbHelper);
@@ -81235,12 +81226,13 @@ return a / b;`;
       this.collisions = new Collisions(this.bird, this.pillars);
       setup4(this.camera, this.bird.obj);
     }
-    tick(time2, deltaTime) {
+    tick(data) {
+      const { time: time2, deltaTime, shoulderAngle } = data;
       this.floor.position.z += PILLAR_SPEED * (deltaTime / 1e3);
       while (this.floor.position.z > 0)
         this.floor.position.z -= 1;
       this.pillars.tick(time2, deltaTime);
-      this.bird.tick(keyboard_exports);
+      this.bird.tick(deltaTime, shoulderAngle);
       this.camera.tick();
       if (this.collisions.tick()) {
         lg5("Crashed!!");
@@ -81275,7 +81267,12 @@ return a / b;`;
         requestAnimationFrame(animate);
         return;
       }
-      game.tick(time2, deltaTime);
+      const data = {
+        time: time2,
+        deltaTime,
+        shoulderAngle: webcamPoseWrapper.getShoulderAngle()
+      };
+      game.tick(data);
       ui.stats.setStat("score", game.score);
       ui.stats.setStat("FPS", 1e3 / deltaTime);
       webcamPoseWrapper.update();

@@ -1,6 +1,8 @@
 import * as THREE from 'three'
 import * as Objects from './objects'
 import * as CONSTS from './constants'
+import * as Keyboard from './keyboard'
+import {clamp} from './utils'
 
 class Bird {
   constructor () {
@@ -19,14 +21,14 @@ class Bird {
     this.bb = null
   }
 
-  tick(keyboard) {
+  tick(deltaTime, shoulderAngle) {
     // do nothing if both keys pressed
-    if (keyboard.up() && !keyboard.down()) {
+    if (Keyboard.up() && !Keyboard.down()) {
       this.obj.position.y += 0.1
       this.obj.rotation.x = THREE.MathUtils.degToRad(20)
     }
     
-    else if (keyboard.down() && !keyboard.up()) {
+    else if (Keyboard.down() && !Keyboard.up()) {
       this.obj.position.y -= 0.1
       this.obj.rotation.x = THREE.MathUtils.degToRad(-20)
     }
@@ -34,24 +36,13 @@ class Bird {
     else {
       this.obj.rotation.x = 0
     }
-    
-    if (keyboard.left() && !keyboard.right()) {
-      this.obj.rotation.z = THREE.MathUtils.degToRad(20)
-      this.obj.rotation.y = THREE.MathUtils.degToRad(5)
-      this.obj.position.x -= 0.1
-    }
-    
-    else if (keyboard.right() && !keyboard.left()) {
-      this.obj.rotation.z = THREE.MathUtils.degToRad(-20)
-      this.obj.rotation.y = THREE.MathUtils.degToRad(-5)
-      this.obj.position.x += 0.1
-    }
 
-    else {
-      this.obj.rotation.z = 0
-      this.obj.rotation.y = 0
-    }
-
+    shoulderAngle = clamp(shoulderAngle, -0.3, 0.3)
+    const xspeed = (shoulderAngle / 0.3) * CONSTS.BIRD_MAX_SPEED_X * (deltaTime / 1000)
+    this.obj.position.x += xspeed
+    this.obj.rotation.z = -2*shoulderAngle
+    
+    // Update Bounding Box for collisions
     this.bbHelper.update()
     // seems to be a bug in the three js library where the bounding sphere
     // is updated instead of the bounding box, so call it manually

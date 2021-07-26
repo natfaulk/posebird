@@ -1,3 +1,5 @@
+import {smooth} from './utils'
+
 export class Stats {
   constructor () {
     this.all = {}
@@ -48,7 +50,7 @@ class SingleStat {
     if (!isFinite(val)) return
 
     if (this.smoothing !== null) {
-      this.val = this.val * this.smoothing + val * (1 - this.smoothing)
+      this.val = smooth(val, this.val, this.smoothing)
       return
     }
 

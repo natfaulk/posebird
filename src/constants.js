@@ -27,6 +27,8 @@ export const BIRD_INIT_POS_X = CAMERA_POS_X + CAMERA_BIRD_OFFSET_X
 export const BIRD_INIT_POS_Y = CAMERA_POS_Y + CAMERA_BIRD_OFFSET_Y
 export const BIRD_INIT_POS_Z = CAMERA_POS_Z + CAMERA_BIRD_OFFSET_Z
 
+export const BIRD_MAX_SPEED_X = 5 // m/s
+
 export const PILLAR_SPEED = 1.2 // m/s
 export const PILLAR_SPACING = 2 // m
 

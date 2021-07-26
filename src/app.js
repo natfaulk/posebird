@@ -32,7 +32,13 @@ const lg = makeLogger('App')
       return
     }
     
-    game.tick(time, deltaTime)
+    const data = {
+      time,
+      deltaTime,
+      shoulderAngle: webcamPoseWrapper.getShoulderAngle()
+    }
+
+    game.tick(data)
     
     ui.stats.setStat('score', game.score)
     ui.stats.setStat('FPS', 1000/(deltaTime))
