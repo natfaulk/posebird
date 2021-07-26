@@ -32,3 +32,9 @@ export const PILLAR_SPACING = 2 // m
 
 export const SHOW_BOUNDING_BOXES = false
 export const BOUNDING_BOX_COLOR = 0xff0000
+
+export const WEBCAM_VIDEO_SIZE = {
+  x: 1280,
+  y: 720
+}
+export const WEBCAM_MIRROR_CAMERA = true

@@ -10,7 +10,7 @@ import * as Lighting from './lighting'
 import * as CONSTS from './constants'
 import {Collisions} from './collisions'
 import {UI} from './ui'
-import {PoseDetection} from './posedetection'
+import {WebcamPoseWrapper} from './webcamPoseWrapper'
 
 const lg = makeLogger('App')
 
@@ -23,7 +23,7 @@ const ORBIT_CAM = false
   const ui = new UI
   ui.hideMenu()
 
-  const pose = new PoseDetection(ui.stats)
+  const webcamPoseWrapper = new WebcamPoseWrapper(ui.stats)
   
   const {scene, camera, renderer, stats} = Scene.setup(ORBIT_CAM)
   
@@ -65,7 +65,7 @@ const ORBIT_CAM = false
       ui.stats.setStat('score', score)
     }
 
-    pose.update()
+    webcamPoseWrapper.update()
     renderer.render(scene, camera)
     ui.update()
     stats.end()

@@ -25893,6 +25893,11 @@
   var PILLAR_SPACING = 2;
   var SHOW_BOUNDING_BOXES = false;
   var BOUNDING_BOX_COLOR = 16711680;
+  var WEBCAM_VIDEO_SIZE = {
+    x: 1280,
+    y: 720
+  };
+  var WEBCAM_MIRROR_CAMERA = true;
 
   // src/scene.js
   var lg = (0, import_supersimplelogger.default)("Scene");
@@ -28375,9 +28380,177 @@
     }
   };
 
-  // src/posedetection.js
-  var import_mindrawingjs = __toModule(require_mindrawing_min());
+  // src/webcam.js
   var import_supersimplelogger4 = __toModule(require_src());
+  var lg4 = (0, import_supersimplelogger4.default)("Webcam");
+  var Webcam = class {
+    constructor() {
+      this.video = null;
+      this.videoReady = false;
+      this.prevFrame = 0;
+      this.cameraSetup();
+    }
+    getNewFrame() {
+      if (!this.videoReady)
+        return null;
+      if (this.video.currentTime === this.prevFrame)
+        return null;
+      this.prevFrame = this.video.currentTime;
+      return this.video;
+    }
+    async cameraSetup() {
+      this.video = await cameraSetup();
+      if (this.video !== null) {
+        this.video.addEventListener("loadeddata", () => {
+          this.videoReady = true;
+          lg4("Video device ready");
+        });
+      }
+    }
+  };
+  var cameraSetup = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      lg4("Browser API navigator.mediaDevices.getUserMedia not available");
+      return null;
+    }
+    const video = document.getElementById("video");
+    video.width = WEBCAM_VIDEO_SIZE.x;
+    video.height = WEBCAM_VIDEO_SIZE.y;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        "audio": false,
+        "video": {
+          width: WEBCAM_VIDEO_SIZE.x,
+          height: WEBCAM_VIDEO_SIZE.y
+        }
+      });
+      video.srcObject = stream;
+      video.play();
+      return video;
+    } catch (_err) {
+      if (_err.name === "NotFoundError")
+        lg4("No camera attached!");
+      else
+        lg4(_err);
+      return null;
+    }
+  };
+
+  // src/webcamCanvas.js
+  var import_mindrawingjs = __toModule(require_mindrawing_min());
+
+  // src/posedrawing.js
+  var dist = (_p1, _p2) => {
+    return Math.hypot(_p1.x - _p2.x, _p1.y - _p2.y);
+  };
+  var newPt = (_x2 = 0, _y2 = 0) => {
+    return { x: _x2, y: _y2 };
+  };
+  var toTuple = ({ y, x }) => {
+    return [y, x];
+  };
+  var color = "red";
+  var lineWidth = 20;
+  var drawSkeleton = (adjacentKeyPoints, ctx, scale2 = 1) => {
+    adjacentKeyPoints.forEach((keypoints) => {
+      drawSegment(toTuple(keypoints[0].position), toTuple(keypoints[1].position), color, scale2, ctx);
+    });
+  };
+  var HEAD_PARTS = [
+    "nose",
+    "leftEye",
+    "rightEye",
+    "leftEar",
+    "rightEar"
+  ];
+  var drawHead = (_kps, ctx) => {
+    const headPts = [];
+    _kps.forEach((_point) => {
+      if (HEAD_PARTS.includes(_point.part))
+        headPts.push(_point.position);
+    });
+    if (headPts.length < 2)
+      return;
+    const centre = newPt();
+    headPts.forEach((_pt) => {
+      centre.x += _pt.x;
+      centre.y += _pt.y;
+    });
+    centre.x /= headPts.length;
+    centre.y /= headPts.length;
+    let maxDist = 0;
+    headPts.forEach((_pt) => {
+      const d = dist(centre, _pt);
+      if (d > maxDist)
+        maxDist = d;
+    });
+    ctx.beginPath();
+    ctx.arc(centre.x, centre.y, maxDist, 0, 2 * Math.PI);
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = color;
+    ctx.stroke();
+  };
+  function drawKeypoints(keypoints, minConfidence, ctx, scale2 = 1) {
+    for (let i = 0; i < keypoints.length; i++) {
+      const keypoint = keypoints[i];
+      if (keypoint.score < minConfidence) {
+        continue;
+      }
+      const { y, x } = keypoint.position;
+      drawPoint(ctx, y * scale2, x * scale2, 8, color);
+    }
+  }
+  var drawPoint = (ctx, y, x, r, color2) => {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = color2;
+    ctx.fill();
+  };
+  var drawSegment = ([ay, ax], [by, bx], color2, scale2, ctx) => {
+    ctx.beginPath();
+    ctx.moveTo(ax * scale2, ay * scale2);
+    ctx.lineTo(bx * scale2, by * scale2);
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = color2;
+    ctx.stroke();
+  };
+  var drawAll = (_ctx, _poses) => {
+    _poses.forEach((_pose) => {
+      drawSkeleton(_pose.adjKps, _ctx);
+      drawKeypoints(_pose.kps, 0.1, _ctx);
+      drawHead(_pose.kps, _ctx);
+    });
+  };
+
+  // src/webcamCanvas.js
+  var WebcamCanvas = class {
+    constructor() {
+      this.d = canvasSetup();
+      this.posecanvas = new OffscreenCanvas(WEBCAM_VIDEO_SIZE.x, WEBCAM_VIDEO_SIZE.y);
+    }
+    async draw(frame2, poses) {
+      const ctx = this.d.getCtx();
+      if (WEBCAM_MIRROR_CAMERA) {
+        ctx.setTransform(-1, 0, 0, 1, this.d.width, 0);
+      }
+      ctx.drawImage(frame2, 0, 0, this.d.width, this.d.height);
+      if (WEBCAM_MIRROR_CAMERA) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
+      if (poses.length > 0) {
+        const ctx2 = this.posecanvas.getContext("2d");
+        ctx2.clearRect(0, 0, this.posecanvas.width, this.posecanvas.height);
+        drawAll(ctx2, poses);
+        ctx.drawImage(this.posecanvas, 0, 0, this.d.width, this.d.height);
+      }
+    }
+  };
+  var canvasSetup = () => {
+    const d = new import_mindrawingjs.default();
+    d.setup("debug-canvas");
+    d.background("black");
+    return d;
+  };
 
   // node_modules/@tensorflow/tfjs-core/dist/index.js
   var dist_exports = {};
@@ -80923,199 +81096,36 @@ return a / b;`;
     });
   }
 
-  // src/posedrawing.js
-  var dist = (_p1, _p2) => {
-    return Math.hypot(_p1.x - _p2.x, _p1.y - _p2.y);
-  };
-  var newPt = (_x2 = 0, _y2 = 0) => {
-    return { x: _x2, y: _y2 };
-  };
-  var toTuple = ({ y, x }) => {
-    return [y, x];
-  };
-  var color = "red";
-  var lineWidth = 20;
-  var drawSkeleton = (adjacentKeyPoints, ctx, scale2 = 1) => {
-    adjacentKeyPoints.forEach((keypoints) => {
-      drawSegment(toTuple(keypoints[0].position), toTuple(keypoints[1].position), color, scale2, ctx);
-    });
-  };
-  var HEAD_PARTS = [
-    "nose",
-    "leftEye",
-    "rightEye",
-    "leftEar",
-    "rightEar"
-  ];
-  var drawHead = (_kps, ctx) => {
-    const headPts = [];
-    _kps.forEach((_point) => {
-      if (HEAD_PARTS.includes(_point.part))
-        headPts.push(_point.position);
-    });
-    if (headPts.length < 2)
-      return;
-    const centre = newPt();
-    headPts.forEach((_pt) => {
-      centre.x += _pt.x;
-      centre.y += _pt.y;
-    });
-    centre.x /= headPts.length;
-    centre.y /= headPts.length;
-    let maxDist = 0;
-    headPts.forEach((_pt) => {
-      const d = dist(centre, _pt);
-      if (d > maxDist)
-        maxDist = d;
-    });
-    ctx.beginPath();
-    ctx.arc(centre.x, centre.y, maxDist, 0, 2 * Math.PI);
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = color;
-    ctx.stroke();
-  };
-  function drawKeypoints(keypoints, minConfidence, ctx, scale2 = 1) {
-    for (let i = 0; i < keypoints.length; i++) {
-      const keypoint = keypoints[i];
-      if (keypoint.score < minConfidence) {
-        continue;
-      }
-      const { y, x } = keypoint.position;
-      drawPoint(ctx, y * scale2, x * scale2, 8, color);
-    }
-  }
-  var drawPoint = (ctx, y, x, r, color2) => {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = color2;
-    ctx.fill();
-  };
-  var drawSegment = ([ay, ax], [by, bx], color2, scale2, ctx) => {
-    ctx.beginPath();
-    ctx.moveTo(ax * scale2, ay * scale2);
-    ctx.lineTo(bx * scale2, by * scale2);
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = color2;
-    ctx.stroke();
-  };
-  var drawAll = (_ctx, _poses) => {
-    _poses.forEach((_pose) => {
-      drawSkeleton(_pose.adjKps, _ctx);
-      drawKeypoints(_pose.kps, 0.1, _ctx);
-      drawHead(_pose.kps, _ctx);
-    });
-  };
-
   // src/posedetection.js
-  var lg4 = (0, import_supersimplelogger4.default)("Pose detect");
-  var VIDEO_SIZE = {
-    x: 1280,
-    y: 720
-  };
-  var MIRROR_CAMERA = true;
   var PoseDetection = class {
-    constructor(stats = null) {
-      this.stats = stats;
-      this.d = canvasSetup();
-      this.posecanvas = new OffscreenCanvas(VIDEO_SIZE.x, VIDEO_SIZE.y);
-      this.video = null;
-      this.videoReady = false;
+    constructor() {
       this.posenetReady = false;
-      this.cameraSetup();
       this.posenetSetup();
-      this.lasttime = performance.now();
-      this.framerate = 0;
-      this.scaleFactor = {
-        x: this.d.width / VIDEO_SIZE.x,
-        y: this.d.height / VIDEO_SIZE.y
-      };
-    }
-    async cameraSetup() {
-      this.video = await cameraSetup();
-      if (this.video !== null) {
-        this.video.addEventListener("loadeddata", () => {
-          this.videoReady = true;
-          lg4("Video device ready");
-        });
-      }
     }
     async posenetSetup() {
       this.posenet = await loadPosenet();
       this.posenetReady = true;
     }
-    async update() {
-      const ctx = this.d.getCtx();
-      if (this.posenetReady && this.videoReady) {
-        const poses = await this.posenet.estimatePoses(this.video, {
-          flipHorizontal: true,
-          decodingMethod: "multi-person",
-          maxDetections: 5,
-          scoreThreshold: 0.1,
-          nmsRadius: 30
-        });
-        const posesOut = [];
-        poses.forEach(({ score, keypoints }) => {
-          if (score >= 0.15) {
-            posesOut.push({
-              kps: keypoints,
-              adjKps: getAdjacentKeyPoints(keypoints, 0.1)
-            });
-          }
-        });
-        if (MIRROR_CAMERA) {
-          ctx.setTransform(-1, 0, 0, 1, this.d.width, 0);
-        }
-        ctx.drawImage(this.video, 0, 0, this.d.width, this.d.height);
-        if (MIRROR_CAMERA) {
-          ctx.setTransform(1, 0, 0, 1, 0, 0);
-        }
-        const t = performance.now();
-        this.framerate = t - this.lasttime;
-        this.lasttime = t;
-        if (this.stats !== null) {
-          this.stats.setStat("poseFPS", 1e3 / this.framerate);
-        }
-        if (posesOut.length > 0) {
-          const ctx2 = this.posecanvas.getContext("2d");
-          ctx2.clearRect(0, 0, this.posecanvas.width, this.posecanvas.height);
-          drawAll(ctx2, posesOut);
-          ctx.drawImage(this.posecanvas, 0, 0, this.d.width, this.d.height);
-          lg4(posesOut);
-        }
-      }
-    }
-  };
-  var canvasSetup = () => {
-    const d = new import_mindrawingjs.default();
-    d.setup("debug-canvas");
-    d.background("black");
-    return d;
-  };
-  var cameraSetup = async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      lg4("Browser API navigator.mediaDevices.getUserMedia not available");
-      return null;
-    }
-    const video = document.getElementById("video");
-    video.width = VIDEO_SIZE.x;
-    video.height = VIDEO_SIZE.y;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        "audio": false,
-        "video": {
-          width: VIDEO_SIZE.x,
-          height: VIDEO_SIZE.y
+    async update(frame2) {
+      if (!this.posenetReady)
+        return [];
+      const poses = await this.posenet.estimatePoses(frame2, {
+        flipHorizontal: true,
+        decodingMethod: "multi-person",
+        maxDetections: 5,
+        scoreThreshold: 0.1,
+        nmsRadius: 30
+      });
+      const posesOut = [];
+      poses.forEach(({ score, keypoints }) => {
+        if (score >= 0.15) {
+          posesOut.push({
+            kps: keypoints,
+            adjKps: getAdjacentKeyPoints(keypoints, 0.1)
+          });
         }
       });
-      video.srcObject = stream;
-      video.play();
-      return video;
-    } catch (_err) {
-      if (_err.name === "NotFoundError")
-        lg4("No camera attached!");
-      else
-        lg4(_err);
-      return null;
+      return posesOut;
     }
   };
   var loadPosenet = async () => {
@@ -81128,6 +81138,35 @@ return a / b;`;
     return net;
   };
 
+  // src/webcamPoseWrapper.js
+  var WebcamPoseWrapper = class {
+    constructor(stats = null) {
+      this.stats = stats;
+      this.webcam = new Webcam();
+      this.webcamCanvas = new WebcamCanvas();
+      this.poseDetect = new PoseDetection();
+      this.lastVideoTime = 0;
+      this.lasttime = performance.now();
+      this.framerate = 0;
+    }
+    async update() {
+      const frame2 = this.webcam.getNewFrame();
+      if (frame2 === null)
+        return;
+      this.updateFPS();
+      const poses = await this.poseDetect.update(frame2);
+      this.webcamCanvas.draw(frame2, poses);
+    }
+    updateFPS() {
+      const t = performance.now();
+      this.framerate = t - this.lasttime;
+      this.lasttime = t;
+      if (this.stats !== null) {
+        this.stats.setStat("poseFPS", 1e3 / this.framerate);
+      }
+    }
+  };
+
   // src/app.js
   var lg5 = (0, import_supersimplelogger5.default)("App");
   var ORBIT_CAM = false;
@@ -81135,7 +81174,7 @@ return a / b;`;
     lg5("Started...");
     const ui = new UI();
     ui.hideMenu();
-    const pose = new PoseDetection(ui.stats);
+    const webcamPoseWrapper = new WebcamPoseWrapper(ui.stats);
     const { scene, camera, renderer, stats } = setup(ORBIT_CAM);
     setup2();
     const floor4 = addFloor(scene);
@@ -81166,7 +81205,7 @@ return a / b;`;
         score += 1;
         ui.stats.setStat("score", score);
       }
-      pose.update();
+      webcamPoseWrapper.update();
       renderer.render(scene, camera);
       ui.update();
       stats.end();
