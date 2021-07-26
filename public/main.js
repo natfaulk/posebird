@@ -25898,6 +25898,8 @@
     y: 720
   };
   var WEBCAM_MIRROR_CAMERA = true;
+  var POSE_MIN_PART_CONFIDENCE = 0.1;
+  var POSE_MIN_POSE_CONFIDENCE = 0.15;
 
   // src/scene.js
   var lg = (0, import_supersimplelogger.default)("Scene");
@@ -28368,6 +28370,10 @@
         smoothing: 0.5,
         fixed: 2
       });
+      this.stats.addStat("shoulder", {
+        fixed: 2,
+        prettyLabel: "Shoulder Angle"
+      });
     }
     hideMenu() {
       document.getElementById(MENU_ID).style.visibility = "hidden";
@@ -28517,7 +28523,7 @@
   var drawAll = (_ctx, _poses) => {
     _poses.forEach((_pose) => {
       drawSkeleton(_pose.adjKps, _ctx);
-      drawKeypoints(_pose.kps, 0.1, _ctx);
+      drawKeypoints(_pose.kps, POSE_MIN_PART_CONFIDENCE, _ctx);
       drawHead(_pose.kps, _ctx);
     });
   };
@@ -81113,15 +81119,15 @@ return a / b;`;
         flipHorizontal: true,
         decodingMethod: "multi-person",
         maxDetections: 5,
-        scoreThreshold: 0.1,
+        scoreThreshold: POSE_MIN_PART_CONFIDENCE,
         nmsRadius: 30
       });
       const posesOut = [];
       poses.forEach(({ score, keypoints }) => {
-        if (score >= 0.15) {
+        if (score >= POSE_MIN_POSE_CONFIDENCE) {
           posesOut.push({
             kps: keypoints,
-            adjKps: getAdjacentKeyPoints(keypoints, 0.1)
+            adjKps: getAdjacentKeyPoints(keypoints, POSE_MIN_PART_CONFIDENCE)
           });
         }
       });
@@ -81138,6 +81144,40 @@ return a / b;`;
     return net;
   };
 
+  // src/poseController.js
+  var LEFT_SHOULDER = "leftShoulder";
+  var RIGHT_SHOULDER = "rightShoulder";
+  var PoseControls = class {
+    constructor() {
+      this.shoulderAngle = 0;
+    }
+    update(poses) {
+      this.decodeShoulderAngle(poses);
+    }
+    decodeShoulderAngle(poses) {
+      if (poses.length === 0)
+        return;
+      const ls = getBodyPart(LEFT_SHOULDER, poses[0]);
+      const rs = getBodyPart(RIGHT_SHOULDER, poses[0]);
+      if (ls !== null && rs !== null) {
+        const dx = rs.position.x - ls.position.x;
+        const dy = rs.position.y - ls.position.y;
+        this.shoulderAngle = Math.atan2(dy, dx);
+      }
+    }
+  };
+  var getBodyPart = (part, poses) => {
+    const kps = poses.kps;
+    for (let i = 0; i < kps.length; i++) {
+      if (kps[i].part === part) {
+        if (kps[i].score > POSE_MIN_PART_CONFIDENCE)
+          return kps[i];
+        return null;
+      }
+    }
+    return null;
+  };
+
   // src/webcamPoseWrapper.js
   var WebcamPoseWrapper = class {
     constructor(stats = null) {
@@ -81145,6 +81185,7 @@ return a / b;`;
       this.webcam = new Webcam();
       this.webcamCanvas = new WebcamCanvas();
       this.poseDetect = new PoseDetection();
+      this.controls = new PoseControls();
       this.lastVideoTime = 0;
       this.lasttime = performance.now();
       this.framerate = 0;
@@ -81155,6 +81196,8 @@ return a / b;`;
         return;
       this.updateFPS();
       const poses = await this.poseDetect.update(frame2);
+      this.controls.update(poses);
+      this.stats.setStat("shoulder", this.controls.shoulderAngle);
       this.webcamCanvas.draw(frame2, poses);
     }
     updateFPS() {
@@ -81164,6 +81207,9 @@ return a / b;`;
       if (this.stats !== null) {
         this.stats.setStat("poseFPS", 1e3 / this.framerate);
       }
+    }
+    getShoulderAngle() {
+      return this.controls.shoulderAngle;
     }
   };
 

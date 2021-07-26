@@ -1,5 +1,7 @@
 // import makeLogger from '@natfaulk/supersimplelogger'
 
+import {POSE_MIN_PART_CONFIDENCE} from './constants'
+
 const dist = (_p1, _p2) => {
   return Math.hypot(_p1.x - _p2.x, _p1.y - _p2.y)
 }
@@ -107,7 +109,7 @@ const drawSegment = ([ay, ax], [by, bx], color, scale, ctx) =>  {
 export const drawAll = (_ctx, _poses) => {
   _poses.forEach(_pose => {
     drawSkeleton(_pose.adjKps, _ctx)
-    drawKeypoints(_pose.kps, 0.1, _ctx)
+    drawKeypoints(_pose.kps, POSE_MIN_PART_CONFIDENCE, _ctx)
     drawHead(_pose.kps, _ctx)
   })
 }

@@ -1,6 +1,7 @@
 import {Webcam} from './webcam'
 import {WebcamCanvas} from './webcamCanvas'
 import {PoseDetection} from './posedetection'
+import {PoseControls} from './poseController'
 
 
 export class WebcamPoseWrapper {
@@ -10,6 +11,7 @@ export class WebcamPoseWrapper {
     this.webcam = new Webcam
     this.webcamCanvas = new WebcamCanvas
     this.poseDetect = new PoseDetection
+    this.controls = new PoseControls
 
     this.lastVideoTime = 0
     this.lasttime = performance.now()
@@ -22,6 +24,9 @@ export class WebcamPoseWrapper {
     this.updateFPS()
 
     const poses = await this.poseDetect.update(frame)
+    
+    this.controls.update(poses)
+    this.stats.setStat('shoulder', this.controls.shoulderAngle)
 
     this.webcamCanvas.draw(frame, poses)
   }
@@ -33,5 +38,9 @@ export class WebcamPoseWrapper {
     if (this.stats !== null) {
       this.stats.setStat('poseFPS', 1000/this.framerate)
     }
+  }
+
+  getShoulderAngle() {
+    return this.controls.shoulderAngle
   }
 }

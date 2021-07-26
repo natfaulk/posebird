@@ -21,6 +21,10 @@ export class UI {
       smoothing: 0.5,
       fixed: 2
     })
+    this.stats.addStat('shoulder', {
+      fixed: 2,
+      prettyLabel: 'Shoulder Angle'
+    })
   }
 
   hideMenu() {

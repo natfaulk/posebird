@@ -38,3 +38,6 @@ export const WEBCAM_VIDEO_SIZE = {
   y: 720
 }
 export const WEBCAM_MIRROR_CAMERA = true
+
+export const POSE_MIN_PART_CONFIDENCE = 0.1
+export const POSE_MIN_POSE_CONFIDENCE = 0.15

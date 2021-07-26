@@ -1,6 +1,7 @@
 // @tensorflow/tfjs is needed for posenet to work
 import '@tensorflow/tfjs'
 import * as Posenet from '@tensorflow-models/posenet'
+import {POSE_MIN_PART_CONFIDENCE, POSE_MIN_POSE_CONFIDENCE} from './constants'
  
 export class PoseDetection {
   constructor() {
@@ -22,16 +23,16 @@ export class PoseDetection {
       flipHorizontal: true,
       decodingMethod: 'multi-person',
       maxDetections: 5,
-      scoreThreshold: 0.1,
+      scoreThreshold: POSE_MIN_PART_CONFIDENCE,
       nmsRadius: 30
     })
 
     const posesOut = []
     poses.forEach(({score, keypoints}) => {
-      if (score >= 0.15) {
+      if (score >= POSE_MIN_POSE_CONFIDENCE) {
         posesOut.push({
           kps: keypoints,
-          adjKps: Posenet.getAdjacentKeyPoints(keypoints, 0.1)
+          adjKps: Posenet.getAdjacentKeyPoints(keypoints, POSE_MIN_PART_CONFIDENCE)
         })
       }
     })
