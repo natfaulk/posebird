@@ -3,9 +3,9 @@ import makeLogger from '@natfaulk/supersimplelogger'
 // needed for posenet to work
 import '@tensorflow/tfjs'
 import * as Posenet from '@tensorflow-models/posenet'
-
-
-const lg = makeLogger('Pose')
+import {drawAll} from './posedrawing'
+ 
+const lg = makeLogger('Pose detect')
 const VIDEO_SIZE = {
   x: 1280,
   y: 720
@@ -17,6 +17,7 @@ export class PoseDetection {
     this.stats = stats
 
     this.d = canvasSetup()
+    this.posecanvas = new OffscreenCanvas(VIDEO_SIZE.x, VIDEO_SIZE.y)
     this.video = null
 
     this.videoReady = false
@@ -27,7 +28,10 @@ export class PoseDetection {
 
     this.lasttime = performance.now()
     this.framerate = 0
-    this.poses = []
+    this.scaleFactor = {
+      x: this.d.width / VIDEO_SIZE.x,
+      y: this.d.height / VIDEO_SIZE.y
+    }
   }
 
   async cameraSetup() {
@@ -47,31 +51,43 @@ export class PoseDetection {
   }
 
   async update() {
-    if (this.videoReady) {
-      const ctx = this.d.getCtx()
-      
-      if (MIRROR_CAMERA) {
-        ctx.setTransform(-1, 0, 0, 1, this.d.width, 0)
-      }
-      ctx.drawImage(this.video, 0, 0, this.d.width, this.d.height)
+    const ctx = this.d.getCtx()
 
-      // // unmirror the canvas again
-      // if (MIRROR_CAMERA) {
-      //   ctx.setTransform(1, 0, 0, 1, 0, 0)
-      // }
-
-      // this.d.fill('blue')
-      // this.d.rect(50, 50, 50, 50)
-    }
-
+    
     if (this.posenetReady && this.videoReady) {
-      this.poses = await this.posenet.estimatePoses(this.video, {
+      const poses = await this.posenet.estimatePoses(this.video, {
         flipHorizontal: true,
         decodingMethod: 'multi-person',
         maxDetections: 5,
         scoreThreshold: 0.1,
         nmsRadius: 30
       })
+      const posesOut = []
+      poses.forEach(({score, keypoints}) => {
+        if (score >= 0.15) {
+          posesOut.push({
+            kps: keypoints,
+            adjKps: Posenet.getAdjacentKeyPoints(keypoints, 0.1)
+          })
+        }
+      })
+      
+      if (MIRROR_CAMERA) {
+        ctx.setTransform(-1, 0, 0, 1, this.d.width, 0)
+      }
+      ctx.drawImage(this.video, 0, 0, this.d.width, this.d.height)
+
+      // unmirror the canvas again
+      if (MIRROR_CAMERA) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+      }
+
+      // this.d.fill('blue')
+      // this.d.rect(50, 50, 50, 50)
+    // }
+
+    // if (this.posenetReady && this.videoReady) {
+      
 
       const t = performance.now()
       this.framerate = t - this.lasttime
@@ -80,7 +96,32 @@ export class PoseDetection {
         this.stats.setStat('poseFPS', 1000/this.framerate)
         // lg(1000/this.framerate)
       }
-      // lg(poses)
+
+      
+      
+      if (posesOut.length > 0) {
+        const ctx2 = this.posecanvas.getContext('2d')
+        ctx2.clearRect(0, 0, this.posecanvas.width, this.posecanvas.height)
+        // ctx.scale(
+        //   this.scaleFactor.x,
+        //   this.scaleFactor.y
+        // )
+
+        drawAll(ctx2, posesOut)
+        // worker.postMessage({
+        //   poses: posesOut
+        // })
+
+        // ctx.scale(
+        //   1 / this.scaleFactor.x,
+        //   1 / this.scaleFactor.y
+        // )
+
+
+        ctx.drawImage(this.posecanvas, 0, 0, this.d.width, this.d.height)
+
+        lg(posesOut)
+      }
     }
   }
 }

@@ -6657,34 +6657,34 @@
       }
       let m;
       if (m = /^((?:rgb|hsl)a?)\(([^\)]*)\)/.exec(style)) {
-        let color;
+        let color2;
         const name = m[1];
         const components = m[2];
         switch (name) {
           case "rgb":
           case "rgba":
-            if (color = /^\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*(\d*\.?\d+)\s*)?$/.exec(components)) {
-              this.r = Math.min(255, parseInt(color[1], 10)) / 255;
-              this.g = Math.min(255, parseInt(color[2], 10)) / 255;
-              this.b = Math.min(255, parseInt(color[3], 10)) / 255;
-              handleAlpha(color[4]);
+            if (color2 = /^\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*(\d*\.?\d+)\s*)?$/.exec(components)) {
+              this.r = Math.min(255, parseInt(color2[1], 10)) / 255;
+              this.g = Math.min(255, parseInt(color2[2], 10)) / 255;
+              this.b = Math.min(255, parseInt(color2[3], 10)) / 255;
+              handleAlpha(color2[4]);
               return this;
             }
-            if (color = /^\s*(\d+)\%\s*,\s*(\d+)\%\s*,\s*(\d+)\%\s*(?:,\s*(\d*\.?\d+)\s*)?$/.exec(components)) {
-              this.r = Math.min(100, parseInt(color[1], 10)) / 100;
-              this.g = Math.min(100, parseInt(color[2], 10)) / 100;
-              this.b = Math.min(100, parseInt(color[3], 10)) / 100;
-              handleAlpha(color[4]);
+            if (color2 = /^\s*(\d+)\%\s*,\s*(\d+)\%\s*,\s*(\d+)\%\s*(?:,\s*(\d*\.?\d+)\s*)?$/.exec(components)) {
+              this.r = Math.min(100, parseInt(color2[1], 10)) / 100;
+              this.g = Math.min(100, parseInt(color2[2], 10)) / 100;
+              this.b = Math.min(100, parseInt(color2[3], 10)) / 100;
+              handleAlpha(color2[4]);
               return this;
             }
             break;
           case "hsl":
           case "hsla":
-            if (color = /^\s*(\d*\.?\d+)\s*,\s*(\d+)\%\s*,\s*(\d+)\%\s*(?:,\s*(\d*\.?\d+)\s*)?$/.exec(components)) {
-              const h = parseFloat(color[1]) / 360;
-              const s = parseInt(color[2], 10) / 100;
-              const l = parseInt(color[3], 10) / 100;
-              handleAlpha(color[4]);
+            if (color2 = /^\s*(\d*\.?\d+)\s*,\s*(\d+)\%\s*,\s*(\d+)\%\s*(?:,\s*(\d*\.?\d+)\s*)?$/.exec(components)) {
+              const h = parseFloat(color2[1]) / 360;
+              const s = parseInt(color2[2], 10) / 100;
+              const l = parseInt(color2[3], 10) / 100;
+              handleAlpha(color2[4]);
               return this.setHSL(h, s, l);
             }
             break;
@@ -6721,23 +6721,23 @@
     clone() {
       return new this.constructor(this.r, this.g, this.b);
     }
-    copy(color) {
-      this.r = color.r;
-      this.g = color.g;
-      this.b = color.b;
+    copy(color2) {
+      this.r = color2.r;
+      this.g = color2.g;
+      this.b = color2.b;
       return this;
     }
-    copyGammaToLinear(color, gammaFactor = 2) {
-      this.r = Math.pow(color.r, gammaFactor);
-      this.g = Math.pow(color.g, gammaFactor);
-      this.b = Math.pow(color.b, gammaFactor);
+    copyGammaToLinear(color2, gammaFactor = 2) {
+      this.r = Math.pow(color2.r, gammaFactor);
+      this.g = Math.pow(color2.g, gammaFactor);
+      this.b = Math.pow(color2.b, gammaFactor);
       return this;
     }
-    copyLinearToGamma(color, gammaFactor = 2) {
+    copyLinearToGamma(color2, gammaFactor = 2) {
       const safeInverse = gammaFactor > 0 ? 1 / gammaFactor : 1;
-      this.r = Math.pow(color.r, safeInverse);
-      this.g = Math.pow(color.g, safeInverse);
-      this.b = Math.pow(color.b, safeInverse);
+      this.r = Math.pow(color2.r, safeInverse);
+      this.g = Math.pow(color2.g, safeInverse);
+      this.b = Math.pow(color2.b, safeInverse);
       return this;
     }
     convertGammaToLinear(gammaFactor) {
@@ -6748,16 +6748,16 @@
       this.copyLinearToGamma(this, gammaFactor);
       return this;
     }
-    copySRGBToLinear(color) {
-      this.r = SRGBToLinear(color.r);
-      this.g = SRGBToLinear(color.g);
-      this.b = SRGBToLinear(color.b);
+    copySRGBToLinear(color2) {
+      this.r = SRGBToLinear(color2.r);
+      this.g = SRGBToLinear(color2.g);
+      this.b = SRGBToLinear(color2.b);
       return this;
     }
-    copyLinearToSRGB(color) {
-      this.r = LinearToSRGB(color.r);
-      this.g = LinearToSRGB(color.g);
-      this.b = LinearToSRGB(color.b);
+    copyLinearToSRGB(color2) {
+      this.r = LinearToSRGB(color2.r);
+      this.g = LinearToSRGB(color2.g);
+      this.b = LinearToSRGB(color2.b);
       return this;
     }
     convertSRGBToLinear() {
@@ -6815,10 +6815,10 @@
       this.setHSL(_hslA.h, _hslA.s, _hslA.l);
       return this;
     }
-    add(color) {
-      this.r += color.r;
-      this.g += color.g;
-      this.b += color.b;
+    add(color2) {
+      this.r += color2.r;
+      this.g += color2.g;
+      this.b += color2.b;
       return this;
     }
     addColors(color1, color2) {
@@ -6833,16 +6833,16 @@
       this.b += s;
       return this;
     }
-    sub(color) {
-      this.r = Math.max(0, this.r - color.r);
-      this.g = Math.max(0, this.g - color.g);
-      this.b = Math.max(0, this.b - color.b);
+    sub(color2) {
+      this.r = Math.max(0, this.r - color2.r);
+      this.g = Math.max(0, this.g - color2.g);
+      this.b = Math.max(0, this.b - color2.b);
       return this;
     }
-    multiply(color) {
-      this.r *= color.r;
-      this.g *= color.g;
-      this.b *= color.b;
+    multiply(color2) {
+      this.r *= color2.r;
+      this.g *= color2.g;
+      this.b *= color2.b;
       return this;
     }
     multiplyScalar(s) {
@@ -6851,10 +6851,10 @@
       this.b *= s;
       return this;
     }
-    lerp(color, alpha) {
-      this.r += (color.r - this.r) * alpha;
-      this.g += (color.g - this.g) * alpha;
-      this.b += (color.b - this.b) * alpha;
+    lerp(color2, alpha) {
+      this.r += (color2.r - this.r) * alpha;
+      this.g += (color2.g - this.g) * alpha;
+      this.b += (color2.b - this.b) * alpha;
       return this;
     }
     lerpColors(color1, color2, alpha) {
@@ -6863,9 +6863,9 @@
       this.b = color1.b + (color2.b - color1.b) * alpha;
       return this;
     }
-    lerpHSL(color, alpha) {
+    lerpHSL(color2, alpha) {
       this.getHSL(_hslA);
-      color.getHSL(_hslB);
+      color2.getHSL(_hslB);
       const h = lerp(_hslA.h, _hslB.h, alpha);
       const s = lerp(_hslA.s, _hslB.s, alpha);
       const l = lerp(_hslA.l, _hslB.l, alpha);
@@ -7004,14 +7004,14 @@
       const array2 = this.array;
       let offset = 0;
       for (let i = 0, l = colors.length; i < l; i++) {
-        let color = colors[i];
-        if (color === void 0) {
+        let color2 = colors[i];
+        if (color2 === void 0) {
           console.warn("THREE.BufferAttribute.copyColorsArray(): color is undefined", i);
-          color = new Color();
+          color2 = new Color();
         }
-        array2[offset++] = color.r;
-        array2[offset++] = color.g;
-        array2[offset++] = color.b;
+        array2[offset++] = color2.r;
+        array2[offset++] = color2.g;
+        array2[offset++] = color2.b;
       }
       return this;
     }
@@ -8571,11 +8571,11 @@
       mesh.material.dispose();
       return this;
     }
-    clear(renderer, color, depth, stencil) {
+    clear(renderer, color2, depth, stencil) {
       const currentRenderTarget = renderer.getRenderTarget();
       for (let i = 0; i < 6; i++) {
         renderer.setRenderTarget(this, i);
-        renderer.clear(color, depth, stencil);
+        renderer.clear(color2, depth, stencil);
       }
       renderer.setRenderTarget(currentRenderTarget);
     }
@@ -9683,15 +9683,15 @@
         renderList.unshift(planeMesh, planeMesh.geometry, planeMesh.material, 0, 0, null);
       }
     }
-    function setClear(color, alpha) {
-      state2.buffers.color.setClear(color.r, color.g, color.b, alpha, premultipliedAlpha);
+    function setClear(color2, alpha) {
+      state2.buffers.color.setClear(color2.r, color2.g, color2.b, alpha, premultipliedAlpha);
     }
     return {
       getClearColor: function() {
         return clearColor;
       },
-      setClearColor: function(color, alpha = 1) {
-        clearColor.set(color);
+      setClearColor: function(color2, alpha = 1) {
+        clearColor.set(color2);
         clearAlpha = alpha;
         setClear(clearColor, clearAlpha);
       },
@@ -12316,14 +12316,14 @@
       lights.sort(shadowCastingLightsFirst);
       for (let i = 0, l = lights.length; i < l; i++) {
         const light = lights[i];
-        const color = light.color;
+        const color2 = light.color;
         const intensity = light.intensity;
         const distance = light.distance;
         const shadowMap = light.shadow && light.shadow.map ? light.shadow.map.texture : null;
         if (light.isAmbientLight) {
-          r += color.r * intensity;
-          g += color.g * intensity;
-          b += color.b * intensity;
+          r += color2.r * intensity;
+          g += color2.g * intensity;
+          b += color2.b * intensity;
         } else if (light.isLightProbe) {
           for (let j = 0; j < 9; j++) {
             state2.probe[j].addScaledVector(light.sh.coefficients[j], intensity);
@@ -12348,7 +12348,7 @@
         } else if (light.isSpotLight) {
           const uniforms = cache.get(light);
           uniforms.position.setFromMatrixPosition(light.matrixWorld);
-          uniforms.color.copy(color).multiplyScalar(intensity);
+          uniforms.color.copy(color2).multiplyScalar(intensity);
           uniforms.distance = distance;
           uniforms.coneCos = Math.cos(light.angle);
           uniforms.penumbraCos = Math.cos(light.angle * (1 - light.penumbra));
@@ -12369,7 +12369,7 @@
           spotLength++;
         } else if (light.isRectAreaLight) {
           const uniforms = cache.get(light);
-          uniforms.color.copy(color).multiplyScalar(intensity);
+          uniforms.color.copy(color2).multiplyScalar(intensity);
           uniforms.halfWidth.set(light.width * 0.5, 0, 0);
           uniforms.halfHeight.set(0, light.height * 0.5, 0);
           state2.rectArea[rectAreaLength] = uniforms;
@@ -12852,7 +12852,7 @@
     const isWebGL2 = capabilities.isWebGL2;
     function ColorBuffer() {
       let locked = false;
-      const color = new Vector4();
+      const color2 = new Vector4();
       let currentColorMask = null;
       const currentColorClear = new Vector4(0, 0, 0, 0);
       return {
@@ -12871,10 +12871,10 @@
             g *= a;
             b *= a;
           }
-          color.set(r, g, b, a);
-          if (currentColorClear.equals(color) === false) {
+          color2.set(r, g, b, a);
+          if (currentColorClear.equals(color2) === false) {
             gl.clearColor(r, g, b, a);
-            currentColorClear.copy(color);
+            currentColorClear.copy(color2);
           }
         },
         reset: function() {
@@ -15447,9 +15447,9 @@
     this.setClearAlpha = function() {
       background.setClearAlpha.apply(background, arguments);
     };
-    this.clear = function(color, depth, stencil) {
+    this.clear = function(color2, depth, stencil) {
       let bits = 0;
-      if (color === void 0 || color)
+      if (color2 === void 0 || color2)
         bits |= 16384;
       if (depth === void 0 || depth)
         bits |= 256;
@@ -15614,10 +15614,10 @@
           renderer.setMode(4);
         }
       } else if (object.isLine) {
-        let lineWidth = material.linewidth;
-        if (lineWidth === void 0)
-          lineWidth = 1;
-        state2.setLineWidth(lineWidth * getTargetPixelRatio());
+        let lineWidth2 = material.linewidth;
+        if (lineWidth2 === void 0)
+          lineWidth2 = 1;
+        state2.setLineWidth(lineWidth2 * getTargetPixelRatio());
         if (object.isLineSegments) {
           renderer.setMode(1);
         } else if (object.isLineLoop) {
@@ -16352,9 +16352,9 @@
   };
   WebGL1Renderer.prototype.isWebGL1Renderer = true;
   var FogExp2 = class {
-    constructor(color, density = 25e-5) {
+    constructor(color2, density = 25e-5) {
       this.name = "";
-      this.color = new Color(color);
+      this.color = new Color(color2);
       this.density = density;
     }
     clone() {
@@ -16370,9 +16370,9 @@
   };
   FogExp2.prototype.isFogExp2 = true;
   var Fog = class {
-    constructor(color, near = 1, far = 1e3) {
+    constructor(color2, near = 1, far = 1e3) {
       this.name = "";
-      this.color = new Color(color);
+      this.color = new Color(color2);
       this.near = near;
       this.far = far;
     }
@@ -17052,8 +17052,8 @@
       this.count = source.count;
       return this;
     }
-    getColorAt(index, color) {
-      color.fromArray(this.instanceColor.array, index * 3);
+    getColorAt(index, color2) {
+      color2.fromArray(this.instanceColor.array, index * 3);
     }
     getMatrixAt(index, matrix) {
       matrix.fromArray(this.instanceMatrix.array, index * 16);
@@ -17079,11 +17079,11 @@
         _instanceIntersects.length = 0;
       }
     }
-    setColorAt(index, color) {
+    setColorAt(index, color2) {
       if (this.instanceColor === null) {
         this.instanceColor = new BufferAttribute(new Float32Array(this.count * 3), 3);
       }
-      color.toArray(this.instanceColor.array, index * 3);
+      color2.toArray(this.instanceColor.array, index * 3);
     }
     setMatrixAt(index, matrix) {
       matrix.toArray(this.instanceMatrix.array, index * 16);
@@ -21161,10 +21161,10 @@
     }
   };
   var Light = class extends Object3D {
-    constructor(color, intensity = 1) {
+    constructor(color2, intensity = 1) {
       super();
       this.type = "Light";
-      this.color = new Color(color);
+      this.color = new Color(color2);
       this.intensity = intensity;
     }
     dispose() {
@@ -21317,8 +21317,8 @@
   };
   SpotLightShadow.prototype.isSpotLightShadow = true;
   var SpotLight = class extends Light {
-    constructor(color, intensity, distance = 0, angle = Math.PI / 3, penumbra = 0, decay = 1) {
-      super(color, intensity);
+    constructor(color2, intensity, distance = 0, angle = Math.PI / 3, penumbra = 0, decay = 1) {
+      super(color2, intensity);
       this.type = "SpotLight";
       this.position.copy(Object3D.DefaultUp);
       this.updateMatrix();
@@ -21405,8 +21405,8 @@
   };
   PointLightShadow.prototype.isPointLightShadow = true;
   var PointLight = class extends Light {
-    constructor(color, intensity, distance = 0, decay = 1) {
-      super(color, intensity);
+    constructor(color2, intensity, distance = 0, decay = 1) {
+      super(color2, intensity);
       this.type = "PointLight";
       this.distance = distance;
       this.decay = decay;
@@ -21525,8 +21525,8 @@
   };
   DirectionalLightShadow.prototype.isDirectionalLightShadow = true;
   var DirectionalLight = class extends Light {
-    constructor(color, intensity) {
-      super(color, intensity);
+    constructor(color2, intensity) {
+      super(color2, intensity);
       this.type = "DirectionalLight";
       this.position.copy(Object3D.DefaultUp);
       this.updateMatrix();
@@ -21545,15 +21545,15 @@
   };
   DirectionalLight.prototype.isDirectionalLight = true;
   var AmbientLight = class extends Light {
-    constructor(color, intensity) {
-      super(color, intensity);
+    constructor(color2, intensity) {
+      super(color2, intensity);
       this.type = "AmbientLight";
     }
   };
   AmbientLight.prototype.isAmbientLight = true;
   var RectAreaLight = class extends Light {
-    constructor(color, intensity, width = 10, height = 10) {
-      super(color, intensity);
+    constructor(color2, intensity, width = 10, height = 10) {
+      super(color2, intensity);
       this.type = "RectAreaLight";
       this.width = width;
       this.height = height;
@@ -22127,9 +22127,9 @@
   };
   HemisphereLightProbe.prototype.isHemisphereLightProbe = true;
   var AmbientLightProbe = class extends LightProbe {
-    constructor(color, intensity = 1) {
+    constructor(color2, intensity = 1) {
       super(void 0, intensity);
-      const color1 = new Color().set(color);
+      const color1 = new Color().set(color2);
       this.sh.coefficients[0].set(color1.r, color1.g, color1.b).multiplyScalar(2 * Math.sqrt(Math.PI));
     }
   };
@@ -24054,14 +24054,14 @@
       for (let i = 0, j = 0, k = -halfSize; i <= divisions; i++, k += step4) {
         vertices.push(-halfSize, 0, k, halfSize, 0, k);
         vertices.push(k, 0, -halfSize, k, 0, halfSize);
-        const color = i === center ? color1 : color2;
-        color.toArray(colors, j);
+        const color3 = i === center ? color1 : color2;
+        color3.toArray(colors, j);
         j += 3;
-        color.toArray(colors, j);
+        color3.toArray(colors, j);
         j += 3;
-        color.toArray(colors, j);
+        color3.toArray(colors, j);
         j += 3;
-        color.toArray(colors, j);
+        color3.toArray(colors, j);
         j += 3;
       }
       const geometry = new BufferGeometry();
@@ -24074,13 +24074,13 @@
   };
   var _box = /* @__PURE__ */ new Box3();
   var BoxHelper = class extends LineSegments {
-    constructor(object, color = 16776960) {
+    constructor(object, color2 = 16776960) {
       const indices = new Uint16Array([0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7]);
       const positions = new Float32Array(8 * 3);
       const geometry = new BufferGeometry();
       geometry.setIndex(new BufferAttribute(indices, 1));
       geometry.setAttribute("position", new BufferAttribute(positions, 3));
-      super(geometry, new LineBasicMaterial({ color, toneMapped: false }));
+      super(geometry, new LineBasicMaterial({ color: color2, toneMapped: false }));
       this.object = object;
       this.type = "BoxHelper";
       this.matrixAutoUpdate = false;
@@ -24756,10 +24756,10 @@
       }
     }
   });
-  WebGLRenderer.prototype.clearTarget = function(renderTarget, color, depth, stencil) {
+  WebGLRenderer.prototype.clearTarget = function(renderTarget, color2, depth, stencil) {
     console.warn("THREE.WebGLRenderer: .clearTarget() has been deprecated. Use .setRenderTarget() and .clear() instead.");
     this.setRenderTarget(renderTarget);
-    this.clear(color, depth, stencil);
+    this.clear(color2, depth, stencil);
   };
   WebGLRenderer.prototype.animate = function(callback) {
     console.warn("THREE.WebGLRenderer: .animate() is now .setAnimationLoop().");
@@ -25065,9 +25065,9 @@
     console.warn("THREE.CubeCamera: .updateCubeMap() is now .update().");
     return this.update(renderer, scene);
   };
-  CubeCamera.prototype.clear = function(renderer, color, depth, stencil) {
+  CubeCamera.prototype.clear = function(renderer, color2, depth, stencil) {
     console.warn("THREE.CubeCamera: .clear() is now .renderTarget.clear().");
-    return this.renderTarget.clear(renderer, color, depth, stencil);
+    return this.renderTarget.clear(renderer, color2, depth, stencil);
   };
   ImageUtils.crossOrigin = void 0;
   ImageUtils.loadTexture = function(url, mapping, onLoad, onError) {
@@ -26147,22 +26147,22 @@
       const lightDefs = extensions.lights || [];
       const lightDef = lightDefs[lightIndex];
       let lightNode;
-      const color = new Color(16777215);
+      const color2 = new Color(16777215);
       if (lightDef.color !== void 0)
-        color.fromArray(lightDef.color);
+        color2.fromArray(lightDef.color);
       const range5 = lightDef.range !== void 0 ? lightDef.range : 0;
       switch (lightDef.type) {
         case "directional":
-          lightNode = new DirectionalLight(color);
+          lightNode = new DirectionalLight(color2);
           lightNode.target.position.set(0, 0, -1);
           lightNode.add(lightNode.target);
           break;
         case "point":
-          lightNode = new PointLight(color);
+          lightNode = new PointLight(color2);
           lightNode.distance = range5;
           break;
         case "spot":
-          lightNode = new SpotLight(color);
+          lightNode = new SpotLight(color2);
           lightNode.distance = range5;
           lightDef.spot = lightDef.spot || {};
           lightDef.spot.innerConeAngle = lightDef.spot.innerConeAngle !== void 0 ? lightDef.spot.innerConeAngle : 0;
@@ -28261,12 +28261,12 @@
 
   // src/lighting.js
   var setup4 = (scene) => {
-    const color = 16777215;
+    const color2 = 16777215;
     const ambientIntensity = 0.1;
     const directionalIntensity = 1;
-    const ambientLight = new AmbientLight(color, ambientIntensity);
+    const ambientLight = new AmbientLight(color2, ambientIntensity);
     scene.add(ambientLight);
-    const directionalLight = new DirectionalLight(color, directionalIntensity);
+    const directionalLight = new DirectionalLight(color2, directionalIntensity);
     directionalLight.position.set(5, 10, 10);
     directionalLight.target.position.set(0, 0, 0);
     scene.add(directionalLight);
@@ -80715,6 +80715,15 @@ return a / b;`;
       return { offsets: e2[2], heatmap: e2[3], displacementFwd: t2, displacementBwd: n };
     }, t;
   }(BaseModel);
+  function eitherPointDoesntMeetConfidence(e, t, n) {
+    return e < n || t < n;
+  }
+  function getAdjacentKeyPoints(e, t) {
+    return connectedPartIndices.reduce(function(n, r) {
+      var o = r[0], i = r[1];
+      return eitherPointDoesntMeetConfidence(e[o].score, e[i].score, t) ? n : (n.push([e[o], e[i]]), n);
+    }, []);
+  }
   var NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
   var POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
   function toTensorBuffers3D(e) {
@@ -80914,8 +80923,91 @@ return a / b;`;
     });
   }
 
+  // src/posedrawing.js
+  var dist = (_p1, _p2) => {
+    return Math.hypot(_p1.x - _p2.x, _p1.y - _p2.y);
+  };
+  var newPt = (_x2 = 0, _y2 = 0) => {
+    return { x: _x2, y: _y2 };
+  };
+  var toTuple = ({ y, x }) => {
+    return [y, x];
+  };
+  var color = "red";
+  var lineWidth = 20;
+  var drawSkeleton = (adjacentKeyPoints, ctx, scale2 = 1) => {
+    adjacentKeyPoints.forEach((keypoints) => {
+      drawSegment(toTuple(keypoints[0].position), toTuple(keypoints[1].position), color, scale2, ctx);
+    });
+  };
+  var HEAD_PARTS = [
+    "nose",
+    "leftEye",
+    "rightEye",
+    "leftEar",
+    "rightEar"
+  ];
+  var drawHead = (_kps, ctx) => {
+    const headPts = [];
+    _kps.forEach((_point) => {
+      if (HEAD_PARTS.includes(_point.part))
+        headPts.push(_point.position);
+    });
+    if (headPts.length < 2)
+      return;
+    const centre = newPt();
+    headPts.forEach((_pt) => {
+      centre.x += _pt.x;
+      centre.y += _pt.y;
+    });
+    centre.x /= headPts.length;
+    centre.y /= headPts.length;
+    let maxDist = 0;
+    headPts.forEach((_pt) => {
+      const d = dist(centre, _pt);
+      if (d > maxDist)
+        maxDist = d;
+    });
+    ctx.beginPath();
+    ctx.arc(centre.x, centre.y, maxDist, 0, 2 * Math.PI);
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = color;
+    ctx.stroke();
+  };
+  function drawKeypoints(keypoints, minConfidence, ctx, scale2 = 1) {
+    for (let i = 0; i < keypoints.length; i++) {
+      const keypoint = keypoints[i];
+      if (keypoint.score < minConfidence) {
+        continue;
+      }
+      const { y, x } = keypoint.position;
+      drawPoint(ctx, y * scale2, x * scale2, 8, color);
+    }
+  }
+  var drawPoint = (ctx, y, x, r, color2) => {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = color2;
+    ctx.fill();
+  };
+  var drawSegment = ([ay, ax], [by, bx], color2, scale2, ctx) => {
+    ctx.beginPath();
+    ctx.moveTo(ax * scale2, ay * scale2);
+    ctx.lineTo(bx * scale2, by * scale2);
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = color2;
+    ctx.stroke();
+  };
+  var drawAll = (_ctx, _poses) => {
+    _poses.forEach((_pose) => {
+      drawSkeleton(_pose.adjKps, _ctx);
+      drawKeypoints(_pose.kps, 0.1, _ctx);
+      drawHead(_pose.kps, _ctx);
+    });
+  };
+
   // src/posedetection.js
-  var lg4 = (0, import_supersimplelogger4.default)("Pose");
+  var lg4 = (0, import_supersimplelogger4.default)("Pose detect");
   var VIDEO_SIZE = {
     x: 1280,
     y: 720
@@ -80925,6 +81017,7 @@ return a / b;`;
     constructor(stats = null) {
       this.stats = stats;
       this.d = canvasSetup();
+      this.posecanvas = new OffscreenCanvas(VIDEO_SIZE.x, VIDEO_SIZE.y);
       this.video = null;
       this.videoReady = false;
       this.posenetReady = false;
@@ -80932,7 +81025,10 @@ return a / b;`;
       this.posenetSetup();
       this.lasttime = performance.now();
       this.framerate = 0;
-      this.poses = [];
+      this.scaleFactor = {
+        x: this.d.width / VIDEO_SIZE.x,
+        y: this.d.height / VIDEO_SIZE.y
+      };
     }
     async cameraSetup() {
       this.video = await cameraSetup();
@@ -80948,26 +81044,43 @@ return a / b;`;
       this.posenetReady = true;
     }
     async update() {
-      if (this.videoReady) {
-        const ctx = this.d.getCtx();
-        if (MIRROR_CAMERA) {
-          ctx.setTransform(-1, 0, 0, 1, this.d.width, 0);
-        }
-        ctx.drawImage(this.video, 0, 0, this.d.width, this.d.height);
-      }
+      const ctx = this.d.getCtx();
       if (this.posenetReady && this.videoReady) {
-        this.poses = await this.posenet.estimatePoses(this.video, {
+        const poses = await this.posenet.estimatePoses(this.video, {
           flipHorizontal: true,
           decodingMethod: "multi-person",
           maxDetections: 5,
           scoreThreshold: 0.1,
           nmsRadius: 30
         });
+        const posesOut = [];
+        poses.forEach(({ score, keypoints }) => {
+          if (score >= 0.15) {
+            posesOut.push({
+              kps: keypoints,
+              adjKps: getAdjacentKeyPoints(keypoints, 0.1)
+            });
+          }
+        });
+        if (MIRROR_CAMERA) {
+          ctx.setTransform(-1, 0, 0, 1, this.d.width, 0);
+        }
+        ctx.drawImage(this.video, 0, 0, this.d.width, this.d.height);
+        if (MIRROR_CAMERA) {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
         const t = performance.now();
         this.framerate = t - this.lasttime;
         this.lasttime = t;
         if (this.stats !== null) {
           this.stats.setStat("poseFPS", 1e3 / this.framerate);
+        }
+        if (posesOut.length > 0) {
+          const ctx2 = this.posecanvas.getContext("2d");
+          ctx2.clearRect(0, 0, this.posecanvas.width, this.posecanvas.height);
+          drawAll(ctx2, posesOut);
+          ctx.drawImage(this.posecanvas, 0, 0, this.d.width, this.d.height);
+          lg4(posesOut);
         }
       }
     }
