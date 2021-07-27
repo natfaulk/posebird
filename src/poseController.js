@@ -1,44 +1,131 @@
-// import makeLogger from '@natfaulk/supersimplelogger'
+import makeLogger from '@natfaulk/supersimplelogger'
 import {POSE_MIN_PART_CONFIDENCE} from './constants'
+import {smooth} from './utils'
 
-// const lg = makeLogger('PoseControl')
+const lg = makeLogger('PoseControl')
 
 const LEFT_SHOULDER = 'leftShoulder'
 const RIGHT_SHOULDER = 'rightShoulder'
+const LEFT_ELBOW = 'leftElbow'
+const RIGHT_ELBOW = 'rightElbow'
+const LEFT_WRIST = 'leftWrist'
+const RIGHT_WRIST = 'rightWrist'
 
 export class PoseControls {
   constructor() {
     this.shoulderAngle = 0
+    this.armAngle = 0
   }
   
   update(poses) {
-    this.decodeShoulderAngle(poses)
+    if (poses.length === 0) 
+    {
+      lg('No body parts found')
+      return
+    }
+
+    const bodyParts = getBodyParts([
+      LEFT_SHOULDER,
+      RIGHT_SHOULDER,
+      LEFT_ELBOW,
+      RIGHT_ELBOW,
+      LEFT_WRIST,
+      RIGHT_WRIST
+    ], poses[0])
+    
+    this.decodeShoulderAngle(bodyParts)
+    this.decodeArmAngle(bodyParts)
   }
 
-  decodeShoulderAngle(poses) {
-    if (poses.length === 0) return
-    // would be more efficient to fetch all at once...
-    // currently just taking the first pose...
-    const ls = getBodyPart(LEFT_SHOULDER, poses[0])
-    const rs = getBodyPart(RIGHT_SHOULDER, poses[0])
-    if (ls !== null && rs !== null) {
+  decodeShoulderAngle(bodyParts) {
+    const ls = bodyParts[LEFT_SHOULDER]
+    const rs = bodyParts[RIGHT_SHOULDER]
+
+    if (ls !== undefined && rs !== undefined) {
       const dx = rs.position.x - ls.position.x
       const dy = rs.position.y - ls.position.y
   
-      this.shoulderAngle = Math.atan2(dy, dx)
-    }
-  }  
-}
-
-const getBodyPart = (part, poses) => {
-  const kps = poses.kps
-
-  for (let i = 0; i < kps.length; i++) {
-    if (kps[i].part === part) {
-      if (kps[i].score > POSE_MIN_PART_CONFIDENCE) return kps[i]
-      return null
+      this.shoulderAngle = smooth(Math.atan2(dy, dx), this.shoulderAngle, 0.75)
     }
   }
 
-  return null
+  decodeArmAngle(bodyParts) {
+    const la = decodeLeftArmAngle(bodyParts)
+    const ra = decodeRightArmAngle(bodyParts)
+
+    if (la === null && ra === null) return
+    if (la === null) {
+      this.armAngle = ra
+      return
+    }
+    if (ra === null) {
+      this.armAngle = la
+      return
+    }
+
+    // just average for now
+    // should take into account how leaning a person is?
+    this.armAngle = (la + ra) / 2
+  }
+}
+
+const getBodyParts = (partList, poses) => {
+  const kps = poses.kps
+
+  const out = {}
+  for (let i = 0; i < kps.length; i++) {
+    if (
+      kps[i].score > POSE_MIN_PART_CONFIDENCE
+      && partList.includes(kps[i].part)
+    ) out[kps[i].part] = kps[i]
+  }
+
+  return out
+}
+
+const decodeLeftArmAngle = bodyParts => {
+  const ls = bodyParts[LEFT_SHOULDER]
+  const le = bodyParts[LEFT_ELBOW]
+  const lw = bodyParts[LEFT_WRIST]
+
+  let out = 0
+  
+  // for now return if shoulder undefined - could probs just use arm segment instead?
+  if (ls === undefined) return null
+  if (le === undefined && lw === undefined) return null
+  if (lw === undefined) {
+    const dx = le.position.x - ls.position.x
+    const dy = le.position.y - ls.position.y
+    out =  Math.atan2(dy, dx)
+  } else {
+    const dx = lw.position.x - ls.position.x
+    const dy = lw.position.y - ls.position.y
+    out = Math.atan2(dy, dx)
+  }
+
+  // scale as if reflected in x axis - ie overlaid over right arm
+  if (out > 0) out -= Math.PI
+  else out += Math.PI
+  out *= -1
+
+  return out
+}
+
+const decodeRightArmAngle = bodyParts => {
+  const rs = bodyParts[RIGHT_SHOULDER]
+  const re = bodyParts[RIGHT_ELBOW]
+  const rw = bodyParts[RIGHT_WRIST]
+
+  // for now return if shoulder undefined - could probs just use arm segment instead?
+  if (rs === undefined) return null
+  if (re === undefined && rw === undefined) return null
+  if (rw === undefined) {
+    const dx = re.position.x - rs.position.x
+    const dy = re.position.y - rs.position.y
+    return Math.atan2(dy, dx)
+  } else {
+    const dx = rw.position.x - rs.position.x
+    const dy = rw.position.y - rs.position.y
+    return Math.atan2(dy, dx)
+  }
 }

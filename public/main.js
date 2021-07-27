@@ -29,7 +29,7 @@
   // node_modules/@natfaulk/supersimplelogger/src/index.js
   var require_src = __commonJS({
     "node_modules/@natfaulk/supersimplelogger/src/index.js"(exports, module) {
-      var makeLogger7 = (_prefix) => {
+      var makeLogger8 = (_prefix) => {
         let p2 = "";
         if (typeof process !== "undefined" && process.env.SSLOGGER_PROCESS_PREFIX !== void 0) {
           p2 = `[${process.env.SSLOGGER_PROCESS_PREFIX}] `;
@@ -47,9 +47,9 @@
         };
       };
       if (typeof module !== "undefined" && module.exports) {
-        module.exports = makeLogger7;
+        module.exports = makeLogger8;
       } else
-        window.makeLogger = makeLogger7;
+        window.makeLogger = makeLogger8;
     }
   });
 
@@ -1585,7 +1585,7 @@
   });
 
   // src/app.js
-  var import_supersimplelogger6 = __toModule(require_src());
+  var import_supersimplelogger7 = __toModule(require_src());
 
   // src/keyboard.js
   var state = {
@@ -1713,6 +1713,10 @@
         fixed: 2,
         prettyLabel: "Shoulder Angle"
       });
+      this.stats.addStat("arm", {
+        fixed: 2,
+        prettyLabel: "Arm Angle"
+      });
     }
     hideMenu() {
       document.getElementById(MENU_ID).style.visibility = "hidden";
@@ -1745,7 +1749,7 @@
   var BIRD_INIT_POS_X = CAMERA_POS_X + CAMERA_BIRD_OFFSET_X;
   var BIRD_INIT_POS_Y = CAMERA_POS_Y + CAMERA_BIRD_OFFSET_Y;
   var BIRD_INIT_POS_Z = CAMERA_POS_Z + CAMERA_BIRD_OFFSET_Z;
-  var BIRD_MAX_SPEED_X = 5;
+  var BIRD_MAX_SPEED_X = 2;
   var PILLAR_SPEED = 1.2;
   var PILLAR_SPACING = 2;
   var SHOW_BOUNDING_BOXES = false;
@@ -54517,37 +54521,111 @@ return a / b;`;
   };
 
   // src/poseController.js
+  var import_supersimplelogger2 = __toModule(require_src());
+  var lg2 = (0, import_supersimplelogger2.default)("PoseControl");
   var LEFT_SHOULDER = "leftShoulder";
   var RIGHT_SHOULDER = "rightShoulder";
+  var LEFT_ELBOW = "leftElbow";
+  var RIGHT_ELBOW = "rightElbow";
+  var LEFT_WRIST = "leftWrist";
+  var RIGHT_WRIST = "rightWrist";
   var PoseControls = class {
     constructor() {
       this.shoulderAngle = 0;
+      this.armAngle = 0;
     }
     update(poses) {
-      this.decodeShoulderAngle(poses);
-    }
-    decodeShoulderAngle(poses) {
-      if (poses.length === 0)
+      if (poses.length === 0) {
+        lg2("No body parts found");
         return;
-      const ls = getBodyPart(LEFT_SHOULDER, poses[0]);
-      const rs = getBodyPart(RIGHT_SHOULDER, poses[0]);
-      if (ls !== null && rs !== null) {
+      }
+      const bodyParts = getBodyParts([
+        LEFT_SHOULDER,
+        RIGHT_SHOULDER,
+        LEFT_ELBOW,
+        RIGHT_ELBOW,
+        LEFT_WRIST,
+        RIGHT_WRIST
+      ], poses[0]);
+      this.decodeShoulderAngle(bodyParts);
+      this.decodeArmAngle(bodyParts);
+    }
+    decodeShoulderAngle(bodyParts) {
+      const ls = bodyParts[LEFT_SHOULDER];
+      const rs = bodyParts[RIGHT_SHOULDER];
+      if (ls !== void 0 && rs !== void 0) {
         const dx = rs.position.x - ls.position.x;
         const dy = rs.position.y - ls.position.y;
-        this.shoulderAngle = Math.atan2(dy, dx);
+        this.shoulderAngle = smooth(Math.atan2(dy, dx), this.shoulderAngle, 0.75);
       }
+    }
+    decodeArmAngle(bodyParts) {
+      const la = decodeLeftArmAngle(bodyParts);
+      const ra = decodeRightArmAngle(bodyParts);
+      if (la === null && ra === null)
+        return;
+      if (la === null) {
+        this.armAngle = ra;
+        return;
+      }
+      if (ra === null) {
+        this.armAngle = la;
+        return;
+      }
+      this.armAngle = (la + ra) / 2;
     }
   };
-  var getBodyPart = (part, poses) => {
+  var getBodyParts = (partList, poses) => {
     const kps = poses.kps;
+    const out = {};
     for (let i = 0; i < kps.length; i++) {
-      if (kps[i].part === part) {
-        if (kps[i].score > POSE_MIN_PART_CONFIDENCE)
-          return kps[i];
-        return null;
-      }
+      if (kps[i].score > POSE_MIN_PART_CONFIDENCE && partList.includes(kps[i].part))
+        out[kps[i].part] = kps[i];
     }
-    return null;
+    return out;
+  };
+  var decodeLeftArmAngle = (bodyParts) => {
+    const ls = bodyParts[LEFT_SHOULDER];
+    const le = bodyParts[LEFT_ELBOW];
+    const lw = bodyParts[LEFT_WRIST];
+    let out = 0;
+    if (ls === void 0)
+      return null;
+    if (le === void 0 && lw === void 0)
+      return null;
+    if (lw === void 0) {
+      const dx = le.position.x - ls.position.x;
+      const dy = le.position.y - ls.position.y;
+      out = Math.atan2(dy, dx);
+    } else {
+      const dx = lw.position.x - ls.position.x;
+      const dy = lw.position.y - ls.position.y;
+      out = Math.atan2(dy, dx);
+    }
+    if (out > 0)
+      out -= Math.PI;
+    else
+      out += Math.PI;
+    out *= -1;
+    return out;
+  };
+  var decodeRightArmAngle = (bodyParts) => {
+    const rs = bodyParts[RIGHT_SHOULDER];
+    const re = bodyParts[RIGHT_ELBOW];
+    const rw = bodyParts[RIGHT_WRIST];
+    if (rs === void 0)
+      return null;
+    if (re === void 0 && rw === void 0)
+      return null;
+    if (rw === void 0) {
+      const dx = re.position.x - rs.position.x;
+      const dy = re.position.y - rs.position.y;
+      return Math.atan2(dy, dx);
+    } else {
+      const dx = rw.position.x - rs.position.x;
+      const dy = rw.position.y - rs.position.y;
+      return Math.atan2(dy, dx);
+    }
   };
 
   // src/webcamPoseWrapper.js
@@ -54570,6 +54648,7 @@ return a / b;`;
       const poses = await this.poseDetect.update(frame2);
       this.controls.update(poses);
       this.stats.setStat("shoulder", this.controls.shoulderAngle);
+      this.stats.setStat("arm", this.controls.armAngle);
       this.webcamCanvas.draw(frame2, poses);
     }
     updateFPS() {
@@ -54583,10 +54662,13 @@ return a / b;`;
     getShoulderAngle() {
       return this.controls.shoulderAngle;
     }
+    getArmAngle() {
+      return this.controls.armAngle;
+    }
   };
 
   // src/scene.js
-  var import_supersimplelogger2 = __toModule(require_src());
+  var import_supersimplelogger3 = __toModule(require_src());
 
   // node_modules/three/build/three.module.js
   var REVISION = "130";
@@ -78868,9 +78950,9 @@ return a / b;`;
   };
 
   // src/scene.js
-  var lg2 = (0, import_supersimplelogger2.default)("Scene");
+  var lg3 = (0, import_supersimplelogger3.default)("Scene");
   var setup2 = (orbitControls = false) => {
-    lg2("Began setup");
+    lg3("Began setup");
     const scene = new Scene();
     const camera = new PerspectiveCamera(CAMERA_FOV, window.innerWidth / window.innerHeight, CAMERA_NEAR, CAMERA_FAR);
     const renderer = new WebGLRenderer();
@@ -78897,7 +78979,7 @@ return a / b;`;
   };
 
   // src/objects.js
-  var import_supersimplelogger3 = __toModule(require_src());
+  var import_supersimplelogger4 = __toModule(require_src());
 
   // node_modules/three/examples/jsm/loaders/GLTFLoader.js
   var GLTFLoader = class extends Loader {
@@ -81010,7 +81092,7 @@ return a / b;`;
   }
 
   // src/objects.js
-  var lg3 = (0, import_supersimplelogger3.default)("App");
+  var lg4 = (0, import_supersimplelogger4.default)("Objects");
   var addFloor = (scene) => {
     const plane = new Mesh(new PlaneGeometry(FLOOR_WIDTH, FLOOR_DEPTH, FLOOR_WIDTH / FLOOR_SQ_SIZE, FLOOR_DEPTH / FLOOR_SQ_SIZE), new MeshBasicMaterial({
       color: 255,
@@ -81032,7 +81114,7 @@ return a / b;`;
     return pillar;
   };
   var addBird = async (scene) => {
-    const bird = await loadGltf("public/models/bird.glb");
+    const bird = await loadGltf("public/models/bird3.glb");
     scene.add(bird);
     bird.position.set(BIRD_INIT_POS_X, BIRD_INIT_POS_Y, BIRD_INIT_POS_Z);
     return bird;
@@ -81048,15 +81130,15 @@ return a / b;`;
       loader.load(path, (gltf) => {
         resolve(gltf.scene);
       }, void 0, (error) => {
-        lg3("GLTF model failed to load...", error);
+        lg4("GLTF model failed to load...", error);
         reject(error);
       });
     });
   };
 
   // src/pillars.js
-  var import_supersimplelogger4 = __toModule(require_src());
-  var lg4 = (0, import_supersimplelogger4.default)("Pillars");
+  var import_supersimplelogger5 = __toModule(require_src());
+  var lg5 = (0, import_supersimplelogger5.default)("Pillars");
   var Pillar = class {
     constructor(scene, p2) {
       this.scene = scene;
@@ -81075,7 +81157,7 @@ return a / b;`;
     cleanup() {
       this.scene.remove(this.bbHelper);
       remove(this.obj, this.scene);
-      lg4("Pillar removed");
+      lg5("Pillar removed");
     }
   };
   var Pillars = class {
@@ -81132,7 +81214,7 @@ return a / b;`;
       this.bbHelper = null;
       this.bb = null;
     }
-    tick(deltaTime, shoulderAngle) {
+    tick(deltaTime, shoulderAngle, armAngle) {
       if (up() && !down()) {
         this.obj.position.y += 0.1;
         this.obj.rotation.x = MathUtils.degToRad(20);
@@ -81143,12 +81225,31 @@ return a / b;`;
         this.obj.rotation.x = 0;
       }
       shoulderAngle = clamp(shoulderAngle, -0.3, 0.3);
+      armAngle = -armAngle;
+      armAngle = clamp(armAngle, -0.5, 0.5);
       const xspeed = shoulderAngle / 0.3 * BIRD_MAX_SPEED_X * (deltaTime / 1e3);
       this.obj.position.x += xspeed;
       this.obj.rotation.z = -2 * shoulderAngle;
+      this.bones.r_wing.rotation.x = armAngle;
+      this.bones.l_wing.rotation.x = armAngle;
       this.bbHelper.update();
       this.bbHelper.geometry.computeBoundingBox();
       this.bb.setFromObject(this.bbHelper);
+    }
+    findBones() {
+      this.bones = {};
+      this.obj.traverse((node) => {
+        if (node.isBone) {
+          if (node.name === "bboneR")
+            this.bones.r_wing = node;
+          if (node.name === "bboneL")
+            this.bones.l_wing = node;
+          if (node.name === "CTRL_outR")
+            this.bones.r_wingtip = node;
+          if (node.name === "CTRL_outL")
+            this.bones.l_wingtip = node;
+        }
+      });
     }
   };
   var newBird = async (scene) => {
@@ -81159,6 +81260,7 @@ return a / b;`;
     bird.bbHelper.visible = SHOW_BOUNDING_BOXES;
     bird.bb = new Box3();
     bird.bb.setFromObject(bird.bbHelper);
+    bird.findBones();
     return bird;
   };
 
@@ -81205,8 +81307,8 @@ return a / b;`;
   };
 
   // src/game.js
-  var import_supersimplelogger5 = __toModule(require_src());
-  var lg5 = (0, import_supersimplelogger5.default)("Game");
+  var import_supersimplelogger6 = __toModule(require_src());
+  var lg6 = (0, import_supersimplelogger6.default)("Game");
   var ORBIT_CAM = false;
   var Game = class {
     constructor() {
@@ -81227,15 +81329,15 @@ return a / b;`;
       setup4(this.camera, this.bird.obj);
     }
     tick(data) {
-      const { time: time2, deltaTime, shoulderAngle } = data;
+      const { time: time2, deltaTime, shoulderAngle, armAngle } = data;
       this.floor.position.z += PILLAR_SPEED * (deltaTime / 1e3);
       while (this.floor.position.z > 0)
         this.floor.position.z -= 1;
       this.pillars.tick(time2, deltaTime);
-      this.bird.tick(deltaTime, shoulderAngle);
+      this.bird.tick(deltaTime, shoulderAngle, armAngle);
       this.camera.tick();
       if (this.collisions.tick()) {
-        lg5("Crashed!!");
+        lg6("Crashed!!");
         this.score += 1;
       }
     }
@@ -81250,9 +81352,9 @@ return a / b;`;
   };
 
   // src/app.js
-  var lg6 = (0, import_supersimplelogger6.default)("App");
+  var lg7 = (0, import_supersimplelogger7.default)("App");
   (async () => {
-    lg6("Started...");
+    lg7("Started...");
     const ui = new UI();
     ui.hideMenu();
     const webcamPoseWrapper = new WebcamPoseWrapper(ui.stats);
@@ -81270,7 +81372,8 @@ return a / b;`;
       const data = {
         time: time2,
         deltaTime,
-        shoulderAngle: webcamPoseWrapper.getShoulderAngle()
+        shoulderAngle: webcamPoseWrapper.getShoulderAngle(),
+        armAngle: webcamPoseWrapper.getArmAngle()
       };
       game.tick(data);
       ui.stats.setStat("score", game.score);

@@ -25,6 +25,10 @@ export class UI {
       fixed: 2,
       prettyLabel: 'Shoulder Angle'
     })
+    this.stats.addStat('arm', {
+      fixed: 2,
+      prettyLabel: 'Arm Angle'
+    })
   }
 
   hideMenu() {

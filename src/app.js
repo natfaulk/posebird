@@ -35,7 +35,8 @@ const lg = makeLogger('App')
     const data = {
       time,
       deltaTime,
-      shoulderAngle: webcamPoseWrapper.getShoulderAngle()
+      shoulderAngle: webcamPoseWrapper.getShoulderAngle(),
+      armAngle: webcamPoseWrapper.getArmAngle()
     }
 
     game.tick(data)

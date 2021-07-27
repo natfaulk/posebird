@@ -21,7 +21,7 @@ class Bird {
     this.bb = null
   }
 
-  tick(deltaTime, shoulderAngle) {
+  tick(deltaTime, shoulderAngle, armAngle) {
     // do nothing if both keys pressed
     if (Keyboard.up() && !Keyboard.down()) {
       this.obj.position.y += 0.1
@@ -38,9 +38,15 @@ class Bird {
     }
 
     shoulderAngle = clamp(shoulderAngle, -0.3, 0.3)
+    armAngle = -armAngle
+    armAngle = clamp(armAngle, -0.5, 0.5)
     const xspeed = (shoulderAngle / 0.3) * CONSTS.BIRD_MAX_SPEED_X * (deltaTime / 1000)
     this.obj.position.x += xspeed
     this.obj.rotation.z = -2*shoulderAngle
+
+    this.bones.r_wing.rotation.x = armAngle
+    this.bones.l_wing.rotation.x = armAngle
+
     
     // Update Bounding Box for collisions
     this.bbHelper.update()
@@ -48,6 +54,18 @@ class Bird {
     // is updated instead of the bounding box, so call it manually
     this.bbHelper.geometry.computeBoundingBox()
     this.bb.setFromObject(this.bbHelper)
+  }
+
+  findBones() {
+    this.bones = {}
+    this.obj.traverse(node => {
+      if (node.isBone) {
+        if (node.name === 'bboneR') this.bones.r_wing = node
+        if (node.name === 'bboneL') this.bones.l_wing = node
+        if (node.name === 'CTRL_outR') this.bones.r_wingtip = node
+        if (node.name === 'CTRL_outL') this.bones.l_wingtip = node
+      }
+    })
   }
 }
 
@@ -64,6 +82,8 @@ export const newBird = async scene => {
   bird.bbHelper.visible = CONSTS.SHOW_BOUNDING_BOXES
   bird.bb = new THREE.Box3()
   bird.bb.setFromObject(bird.bbHelper)
+
+  bird.findBones()
 
   return bird
 }

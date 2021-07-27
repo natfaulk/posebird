@@ -27,6 +27,7 @@ export class WebcamPoseWrapper {
     
     this.controls.update(poses)
     this.stats.setStat('shoulder', this.controls.shoulderAngle)
+    this.stats.setStat('arm', this.controls.armAngle)
 
     this.webcamCanvas.draw(frame, poses)
   }
@@ -42,5 +43,9 @@ export class WebcamPoseWrapper {
 
   getShoulderAngle() {
     return this.controls.shoulderAngle
+  }
+
+  getArmAngle() {
+    return this.controls.armAngle
   }
 }
