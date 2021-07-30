@@ -81351,10 +81351,18 @@ return a / b;`;
     return g;
   };
 
+  // src/version.js
+  var VERSION = "0.1.0";
+  var setVersion = () => {
+    const el = document.getElementById("version");
+    el.innerHTML = `Version: ${VERSION}`;
+  };
+
   // src/app.js
   var lg7 = (0, import_supersimplelogger7.default)("App");
   (async () => {
     lg7("Started...");
+    setVersion();
     const ui = new UI();
     ui.hideMenu();
     const webcamPoseWrapper = new WebcamPoseWrapper(ui.stats);

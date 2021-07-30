@@ -5,11 +5,13 @@ import * as Keyboard from './keyboard'
 import {UI} from './ui'
 import {WebcamPoseWrapper} from './webcamPoseWrapper'
 import {newGame} from './game'
+import {setVersion} from './version'
 
 const lg = makeLogger('App')
 
 ;(async () => {
   lg('Started...')
+  setVersion()
 
   // just hide menu for now...
   const ui = new UI

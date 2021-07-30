@@ -41,3 +41,15 @@ div#pose-debug {
   bottom: 0;
   opacity: 0.5;
 }
+
+div#info {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  background-color: white;
+  color: gray;
+}
+
+div#info a {
+  color: inherit;
+}
