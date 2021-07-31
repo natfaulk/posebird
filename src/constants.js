@@ -1,4 +1,4 @@
-export const FLOOR_WIDTH = 10
+export const FLOOR_WIDTH = 20
 export const FLOOR_DEPTH = 20
 export const FLOOR_SQ_SIZE = 1
 

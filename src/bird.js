@@ -47,7 +47,8 @@ class Bird {
     this.bones.r_wing.rotation.x = armAngle
     this.bones.l_wing.rotation.x = armAngle
 
-    
+    this.obj.position.x = clamp(this.obj.position.x, -CONSTS.FLOOR_WIDTH / 2, CONSTS.FLOOR_WIDTH / 2)
+
     // Update Bounding Box for collisions
     this.bbHelper.update()
     // seems to be a bug in the three js library where the bounding sphere

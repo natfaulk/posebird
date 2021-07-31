@@ -1734,7 +1734,7 @@
   };
 
   // src/constants.js
-  var FLOOR_WIDTH = 10;
+  var FLOOR_WIDTH = 20;
   var FLOOR_DEPTH = 20;
   var FLOOR_SQ_SIZE = 1;
   var PILLAR_WIDTH = 0.5;
@@ -81264,6 +81264,7 @@ return a / b;`;
       this.obj.rotation.z = -2 * shoulderAngle;
       this.bones.r_wing.rotation.x = armAngle;
       this.bones.l_wing.rotation.x = armAngle;
+      this.obj.position.x = clamp(this.obj.position.x, -FLOOR_WIDTH / 2, FLOOR_WIDTH / 2);
       this.bbHelper.update();
       this.bbHelper.geometry.computeBoundingBox();
       this.bb.setFromObject(this.bbHelper);
