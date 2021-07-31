@@ -1,5 +1,6 @@
 const MENU_ID = 'menu-overlay'
 const PLAY_ID = 'play-button'
+const LOADING_ID = 'loading'
 
 import {Stats} from './stats'
 
@@ -41,5 +42,9 @@ export class UI {
 
   update() {
     this.stats.update()
+  }
+
+  hideloadingScreen() {
+    document.getElementById(LOADING_ID).style.visibility = 'hidden'
   }
 }

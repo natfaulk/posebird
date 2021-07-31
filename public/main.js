@@ -1693,6 +1693,7 @@
   // src/ui.js
   var MENU_ID = "menu-overlay";
   var PLAY_ID = "play-button";
+  var LOADING_ID = "loading";
   var UI = class {
     constructor() {
       document.getElementById(PLAY_ID).addEventListener("click", () => {
@@ -1726,6 +1727,9 @@
     }
     update() {
       this.stats.update();
+    }
+    hideloadingScreen() {
+      document.getElementById(LOADING_ID).style.visibility = "hidden";
     }
   };
 
@@ -1770,7 +1774,6 @@
       this.video = null;
       this.videoReady = false;
       this.prevFrame = 0;
-      this.cameraSetup();
     }
     getNewFrame() {
       if (!this.videoReady)
@@ -1783,11 +1786,19 @@
     async cameraSetup() {
       this.video = await cameraSetup();
       if (this.video !== null) {
+        await this.waitForVideoLoadeddata();
+        return true;
+      }
+      return false;
+    }
+    waitForVideoLoadeddata() {
+      return new Promise((resolve) => {
         this.video.addEventListener("loadeddata", () => {
           this.videoReady = true;
           lg("Video device ready");
+          resolve();
         });
-      }
+      });
     }
   };
   var cameraSetup = async () => {
@@ -1816,6 +1827,13 @@
         lg(_err);
       return null;
     }
+  };
+  var newWebcam = async () => {
+    const w = new Webcam();
+    if (!await w.cameraSetup()) {
+      lg("Webcam failed to load!");
+    }
+    return w;
   };
 
   // src/webcamCanvas.js
@@ -54482,7 +54500,6 @@ return a / b;`;
   var PoseDetection = class {
     constructor() {
       this.posenetReady = false;
-      this.posenetSetup();
     }
     async posenetSetup() {
       this.posenet = await loadPosenet();
@@ -54518,6 +54535,11 @@ return a / b;`;
       multiplier: 0.75
     });
     return net;
+  };
+  var newPoseDetection = async () => {
+    const pd = new PoseDetection();
+    await pd.posenetSetup();
+    return pd;
   };
 
   // src/poseController.js
@@ -54632,13 +54654,15 @@ return a / b;`;
   var WebcamPoseWrapper = class {
     constructor(stats = null) {
       this.stats = stats;
-      this.webcam = new Webcam();
-      this.webcamCanvas = new WebcamCanvas();
-      this.poseDetect = new PoseDetection();
-      this.controls = new PoseControls();
       this.lastVideoTime = 0;
       this.lasttime = performance.now();
       this.framerate = 0;
+    }
+    async setup() {
+      this.webcam = await newWebcam();
+      this.webcamCanvas = new WebcamCanvas();
+      this.poseDetect = await newPoseDetection();
+      this.controls = new PoseControls();
     }
     async update() {
       const frame2 = this.webcam.getNewFrame();
@@ -54665,6 +54689,14 @@ return a / b;`;
     getArmAngle() {
       return this.controls.armAngle;
     }
+    isReady() {
+      return this.webcam.videoReady && this.poseDetect.posenetReady;
+    }
+  };
+  var newWebcamPoseWrapper = async (stats = null) => {
+    const wpw = new WebcamPoseWrapper(stats);
+    await wpw.setup();
+    return wpw;
   };
 
   // src/scene.js
@@ -81365,9 +81397,11 @@ return a / b;`;
     setVersion();
     const ui = new UI();
     ui.hideMenu();
-    const webcamPoseWrapper = new WebcamPoseWrapper(ui.stats);
+    const webcamPoseWrapper = await newWebcamPoseWrapper(ui.stats);
     setup();
     const game = await newGame();
+    ui.hideloadingScreen();
+    lg7("Setup done");
     let prevtime = 0;
     const animate = (time2) => {
       game.stats.begin();

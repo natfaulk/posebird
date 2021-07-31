@@ -3,7 +3,7 @@ import makeLogger from '@natfaulk/supersimplelogger'
 
 import * as Keyboard from './keyboard'
 import {UI} from './ui'
-import {WebcamPoseWrapper} from './webcamPoseWrapper'
+import {newWebcamPoseWrapper} from './webcamPoseWrapper'
 import {newGame} from './game'
 import {setVersion} from './version'
 
@@ -16,12 +16,14 @@ const lg = makeLogger('App')
   // just hide menu for now...
   const ui = new UI
   ui.hideMenu()
-
-  const webcamPoseWrapper = new WebcamPoseWrapper(ui.stats)
-  Keyboard.setup()
-    
-  const game = await newGame()
   
+  const webcamPoseWrapper = await newWebcamPoseWrapper(ui.stats)
+  Keyboard.setup()
+  
+  const game = await newGame()
+  ui.hideloadingScreen()
+  lg('Setup done')
+    
   let prevtime = 0
   const animate = time => {
     game.stats.begin()

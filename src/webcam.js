@@ -3,15 +3,11 @@ import makeLogger from '@natfaulk/supersimplelogger'
 
 const lg = makeLogger('Webcam')
 
-export class Webcam {
+class Webcam {
   constructor() {
     this.video = null
     this.videoReady = false
     this.prevFrame = 0
-
-    // is async, but sets a flag once it is done,
-    // cant have await in ctor
-    this.cameraSetup()
   }
 
   // if there is a new frame returns frame else returns null
@@ -26,12 +22,23 @@ export class Webcam {
   async cameraSetup() {
     this.video = await cameraSetup()
     if (this.video !== null) {
+      await this.waitForVideoLoadeddata()
+      return true
+    }
+
+    return false
+  }
+
+  waitForVideoLoadeddata() {
+    return new Promise(resolve => {
       this.video.addEventListener('loadeddata', () => {
         // 'this' is from outside scope as arrow function has no this
         this.videoReady = true
         lg('Video device ready')
+
+        resolve()
       })
-    }
+    })
   }
 }
 
@@ -62,4 +69,13 @@ const cameraSetup = async () => {
 
     return null
   }
+}
+
+export const newWebcam = async () => {
+  const w = new Webcam()
+  if (!await w.cameraSetup()) {
+    lg('Webcam failed to load!')
+  }
+
+  return w
 }

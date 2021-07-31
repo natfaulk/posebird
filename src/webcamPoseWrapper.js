@@ -1,21 +1,23 @@
-import {Webcam} from './webcam'
+import {newWebcam} from './webcam'
 import {WebcamCanvas} from './webcamCanvas'
-import {PoseDetection} from './posedetection'
+import {newPoseDetection} from './posedetection'
 import {PoseControls} from './poseController'
 
 
-export class WebcamPoseWrapper {
+class WebcamPoseWrapper {
   constructor(stats = null) {
     this.stats = stats
-
-    this.webcam = new Webcam
-    this.webcamCanvas = new WebcamCanvas
-    this.poseDetect = new PoseDetection
-    this.controls = new PoseControls
-
     this.lastVideoTime = 0
     this.lasttime = performance.now()
     this.framerate = 0
+  }
+
+
+  async setup() {
+    this.webcam = await newWebcam()
+    this.webcamCanvas = new WebcamCanvas
+    this.poseDetect = await newPoseDetection()
+    this.controls = new PoseControls
   }
 
   async update() {
@@ -48,4 +50,14 @@ export class WebcamPoseWrapper {
   getArmAngle() {
     return this.controls.armAngle
   }
+
+  isReady() {
+    return (this.webcam.videoReady && this.poseDetect.posenetReady)
+  }
+}
+
+export const newWebcamPoseWrapper = async (stats = null) => {
+  const wpw = new WebcamPoseWrapper(stats)
+  await wpw.setup()
+  return wpw
 }

@@ -3,12 +3,9 @@ import '@tensorflow/tfjs'
 import * as Posenet from '@tensorflow-models/posenet'
 import {POSE_MIN_PART_CONFIDENCE, POSE_MIN_POSE_CONFIDENCE} from './constants'
  
-export class PoseDetection {
+class PoseDetection {
   constructor() {
     this.posenetReady = false
-
-    // is async, but sets a flag once it is done
-    this.posenetSetup()
   }
 
   async posenetSetup() {
@@ -50,4 +47,11 @@ const loadPosenet = async () => {
   })
 
   return net
+}
+
+export const newPoseDetection = async () => {
+  const pd = new PoseDetection
+  await pd.posenetSetup()
+
+  return pd
 }
