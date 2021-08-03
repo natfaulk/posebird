@@ -1,5 +1,5 @@
 import makeLogger from '@natfaulk/supersimplelogger'
-import {POSE_MIN_PART_CONFIDENCE} from './constants'
+import {POSE_MIN_PART_CONFIDENCE, SHOULDER_ANGLE_SMOOTHING, ARM_ANGLE_SMOOTHING} from './constants'
 import {smooth} from './utils'
 
 const lg = makeLogger('PoseControl')
@@ -15,6 +15,7 @@ export class PoseControls {
   constructor() {
     this.shoulderAngle = 0
     this.armAngle = 0
+    this.poseId = 0
   }
   
   update(poses) {
@@ -35,6 +36,7 @@ export class PoseControls {
     
     this.decodeShoulderAngle(bodyParts)
     this.decodeArmAngle(bodyParts)
+    this.nextPoseId()
   }
 
   decodeShoulderAngle(bodyParts) {
@@ -45,7 +47,7 @@ export class PoseControls {
       const dx = rs.position.x - ls.position.x
       const dy = rs.position.y - ls.position.y
   
-      this.shoulderAngle = smooth(Math.atan2(dy, dx), this.shoulderAngle, 0.75)
+      this.setShoulderAngle(Math.atan2(dy, dx))
     }
   }
 
@@ -55,17 +57,31 @@ export class PoseControls {
 
     if (la === null && ra === null) return
     if (la === null) {
-      this.armAngle = ra
+      this.setArmAngle(ra)
       return
     }
     if (ra === null) {
-      this.armAngle = la
+      this.setArmAngle(la)
       return
     }
 
     // just average for now
     // should take into account how leaning a person is?
-    this.armAngle = (la + ra) / 2
+    this.setArmAngle((la + ra) / 2)
+  }
+
+  // smoothes before setting
+  setShoulderAngle(val) {
+    this.shoulderAngle = smooth(val, this.shoulderAngle, SHOULDER_ANGLE_SMOOTHING)
+  }
+
+  // smoothes before setting
+  setArmAngle(val) {
+    this.armAngle = smooth(val, this.armAngle, ARM_ANGLE_SMOOTHING)
+  }
+
+  nextPoseId() {
+    this.poseId += 1
   }
 }
 

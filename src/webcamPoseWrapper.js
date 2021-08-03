@@ -12,7 +12,6 @@ class WebcamPoseWrapper {
     this.framerate = 0
   }
 
-
   async setup() {
     this.webcam = await newWebcam()
     this.webcamCanvas = new WebcamCanvas
@@ -53,6 +52,10 @@ class WebcamPoseWrapper {
 
   isReady() {
     return (this.webcam.videoReady && this.poseDetect.posenetReady)
+  }
+
+  getPoseId() {
+    return this.controls.poseId
   }
 }
 

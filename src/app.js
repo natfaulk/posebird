@@ -39,8 +39,13 @@ const lg = makeLogger('App')
     const data = {
       time,
       deltaTime,
-      shoulderAngle: webcamPoseWrapper.getShoulderAngle(),
-      armAngle: webcamPoseWrapper.getArmAngle()
+      controls: {
+        shoulderAngle: webcamPoseWrapper.getShoulderAngle(),
+        armAngle: webcamPoseWrapper.getArmAngle(),
+        // poseid is incremented everytime a new webcam frame is processed
+        // this can be used to tell if there is new control input
+        poseId: webcamPoseWrapper.getPoseId()
+      }
     }
 
     game.tick(data)

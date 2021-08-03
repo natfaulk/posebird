@@ -3,7 +3,7 @@ export const FLOOR_DEPTH = 20
 export const FLOOR_SQ_SIZE = 1
 
 export const PILLAR_WIDTH = 0.5
-export const PILLAR_HEIGHT = 5
+export const PILLAR_HEIGHT = 10
 export const PILLAR_COLOR = 0x66563c
 
 export const CAMERA_FOV = 75
@@ -19,10 +19,6 @@ export const CAMERA_BIRD_OFFSET_X = 0
 export const CAMERA_BIRD_OFFSET_Y = -0.5
 export const CAMERA_BIRD_OFFSET_Z = -1
 
-// export const BIRD_WIDTH = 0.2
-// export const BIRD_DEPTH = 0.1
-// export const BIRD_HEIGHT = 0.1
-// export const BIRD_COLOR = 0x3d4047
 export const BIRD_INIT_POS_X = CAMERA_POS_X + CAMERA_BIRD_OFFSET_X
 export const BIRD_INIT_POS_Y = CAMERA_POS_Y + CAMERA_BIRD_OFFSET_Y
 export const BIRD_INIT_POS_Z = CAMERA_POS_Z + CAMERA_BIRD_OFFSET_Z
@@ -43,3 +39,13 @@ export const WEBCAM_MIRROR_CAMERA = true
 
 export const POSE_MIN_PART_CONFIDENCE = 0.1
 export const POSE_MIN_POSE_CONFIDENCE = 0.15
+
+// 
+// Flapping constants
+export const SHOULDER_ANGLE_SMOOTHING = 0.75
+export const ARM_ANGLE_SMOOTHING = 0.75
+export const MAX_INERTIA = 250 // ms
+// "gravity" is how fast it falls in free fall
+export const GRAVITY = -1.0
+// gravity always applied so subtract it
+export const MAX_UPWARD_SPEED = 4 - GRAVITY

@@ -38,13 +38,13 @@ class Game {
   }
 
   tick(data) {
-    const {time, deltaTime, shoulderAngle, armAngle} = data
+    const {time, deltaTime, controls} = data
 
     this.floor.position.z += CONSTS.PILLAR_SPEED * (deltaTime / 1000)
     while (this.floor.position.z > 0) this.floor.position.z -= 1
     this.pillars.tick(time, deltaTime)
 
-    this.bird.tick(deltaTime, shoulderAngle, armAngle)
+    this.bird.tick(deltaTime, controls)
     this.camera.tick()
 
     if (this.collisions.tick()) {
