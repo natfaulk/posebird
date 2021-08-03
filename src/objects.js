@@ -6,25 +6,6 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
 
 const lg = makeLogger('Objects')
 
-export const addFloor = scene => {
-  const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(
-      CONSTS.FLOOR_WIDTH,
-      CONSTS.FLOOR_DEPTH,
-      CONSTS.FLOOR_WIDTH / CONSTS.FLOOR_SQ_SIZE,
-      CONSTS.FLOOR_DEPTH / CONSTS.FLOOR_SQ_SIZE
-    ),
-    new THREE.MeshBasicMaterial({
-      color: 0x0000ff,
-      wireframe: true,
-    })
-  )
-  scene.add(plane)
-  plane.lookAt(new THREE.Vector3(0, 1, 0))
-
-  return plane
-}
-
 export const addPillar = (scene, zposition=null) => {
   if (zposition === null) {
     zposition = -CONSTS.FLOOR_DEPTH / 2

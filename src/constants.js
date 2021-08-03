@@ -1,4 +1,6 @@
 export const FLOOR_WIDTH = 20
+// extra strips up side of floor to hide edge of world
+export const FLOOR_OVERHANG = 20
 export const FLOOR_DEPTH = 20
 export const FLOOR_SQ_SIZE = 1
 
@@ -16,7 +18,7 @@ export const CAMERA_POS_Y = 3
 export const CAMERA_POS_Z = 8
 
 export const CAMERA_BIRD_OFFSET_X = 0
-export const CAMERA_BIRD_OFFSET_Y = -0.5
+export const CAMERA_BIRD_OFFSET_Y = -0.3
 export const CAMERA_BIRD_OFFSET_Z = -1
 
 export const BIRD_INIT_POS_X = CAMERA_POS_X + CAMERA_BIRD_OFFSET_X

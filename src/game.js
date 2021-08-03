@@ -1,13 +1,12 @@
 import * as Scene from './scene'
-import * as Objects from './objects'
 import {Pillars} from './pillars'
 import {newBird} from './bird'
 import {Collisions} from './collisions'
 import * as Lighting from './lighting'
 import * as Camera from './camera'
-import * as CONSTS from './constants'
 
 import makeLogger from '@natfaulk/supersimplelogger'
+import {Floor} from './floor'
 const lg = makeLogger('Game')
 
 // only use for debugging as is broken...
@@ -28,7 +27,7 @@ class Game {
   }
 
   async setup() {
-    this.floor = Objects.addFloor(this.scene)
+    this.floor = new Floor(this.scene)
     this.bird = await newBird(this.scene)
     this.pillars = new Pillars(this.scene)
     this.collisions = new Collisions(this.bird, this.pillars)
@@ -40,8 +39,7 @@ class Game {
   tick(data) {
     const {time, deltaTime, controls} = data
 
-    this.floor.position.z += CONSTS.PILLAR_SPEED * (deltaTime / 1000)
-    while (this.floor.position.z > 0) this.floor.position.z -= 1
+    this.floor.tick(deltaTime)
     this.pillars.tick(time, deltaTime)
 
     this.bird.tick(deltaTime, controls)

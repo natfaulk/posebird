@@ -29,7 +29,7 @@
   // node_modules/@natfaulk/supersimplelogger/src/index.js
   var require_src = __commonJS({
     "node_modules/@natfaulk/supersimplelogger/src/index.js"(exports, module) {
-      var makeLogger8 = (_prefix) => {
+      var makeLogger9 = (_prefix) => {
         let p2 = "";
         if (typeof process !== "undefined" && process.env.SSLOGGER_PROCESS_PREFIX !== void 0) {
           p2 = `[${process.env.SSLOGGER_PROCESS_PREFIX}] `;
@@ -47,9 +47,9 @@
         };
       };
       if (typeof module !== "undefined" && module.exports) {
-        module.exports = makeLogger8;
+        module.exports = makeLogger9;
       } else
-        window.makeLogger = makeLogger8;
+        window.makeLogger = makeLogger9;
     }
   });
 
@@ -1585,7 +1585,7 @@
   });
 
   // src/app.js
-  var import_supersimplelogger7 = __toModule(require_src());
+  var import_supersimplelogger8 = __toModule(require_src());
 
   // src/keyboard.js
   var state = {
@@ -1729,6 +1729,7 @@
 
   // src/constants.js
   var FLOOR_WIDTH = 20;
+  var FLOOR_OVERHANG = 20;
   var FLOOR_DEPTH = 20;
   var FLOOR_SQ_SIZE = 1;
   var PILLAR_WIDTH = 0.5;
@@ -1742,7 +1743,7 @@
   var CAMERA_POS_Y = 3;
   var CAMERA_POS_Z = 8;
   var CAMERA_BIRD_OFFSET_X = 0;
-  var CAMERA_BIRD_OFFSET_Y = -0.5;
+  var CAMERA_BIRD_OFFSET_Y = -0.3;
   var CAMERA_BIRD_OFFSET_Z = -1;
   var BIRD_INIT_POS_X = CAMERA_POS_X + CAMERA_BIRD_OFFSET_X;
   var BIRD_INIT_POS_Y = CAMERA_POS_Y + CAMERA_BIRD_OFFSET_Y;
@@ -79002,6 +79003,7 @@ return a / b;`;
     const camera = new PerspectiveCamera(CAMERA_FOV, window.innerWidth / window.innerHeight, CAMERA_NEAR, CAMERA_FAR);
     const renderer = new WebGLRenderer();
     const stats = stats_module_default();
+    scene.fog = new Fog(CAMERA_CLEAR_COLOR, 14, 16);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(CAMERA_CLEAR_COLOR);
     document.body.appendChild(renderer.domElement);
@@ -79022,6 +79024,9 @@ return a / b;`;
       camera.updateProjectionMatrix();
     };
   };
+
+  // src/pillars.js
+  var import_supersimplelogger5 = __toModule(require_src());
 
   // src/objects.js
   var import_supersimplelogger4 = __toModule(require_src());
@@ -81138,15 +81143,6 @@ return a / b;`;
 
   // src/objects.js
   var lg4 = (0, import_supersimplelogger4.default)("Objects");
-  var addFloor = (scene) => {
-    const plane = new Mesh(new PlaneGeometry(FLOOR_WIDTH, FLOOR_DEPTH, FLOOR_WIDTH / FLOOR_SQ_SIZE, FLOOR_DEPTH / FLOOR_SQ_SIZE), new MeshBasicMaterial({
-      color: 255,
-      wireframe: true
-    }));
-    scene.add(plane);
-    plane.lookAt(new Vector3(0, 1, 0));
-    return plane;
-  };
   var addPillar = (scene, zposition = null) => {
     if (zposition === null) {
       zposition = -FLOOR_DEPTH / 2;
@@ -81182,7 +81178,6 @@ return a / b;`;
   };
 
   // src/pillars.js
-  var import_supersimplelogger5 = __toModule(require_src());
   var lg5 = (0, import_supersimplelogger5.default)("Pillars");
   var Pillar = class {
     constructor(scene, p2) {
@@ -81368,7 +81363,7 @@ return a / b;`;
   // src/camera.js
   var setup4 = (camera, tofollow) => {
     camera.position.set(CAMERA_POS_X, CAMERA_POS_Y, CAMERA_POS_Z);
-    camera.lookAt(new Vector3(0, 2, 0));
+    camera.lookAt(new Vector3(0, CAMERA_POS_Y, 0));
     camera.tick = function() {
       this.position.setX(tofollow.position.x - CAMERA_BIRD_OFFSET_X);
       this.position.setY(tofollow.position.y - CAMERA_BIRD_OFFSET_Y);
@@ -81376,8 +81371,78 @@ return a / b;`;
   };
 
   // src/game.js
+  var import_supersimplelogger7 = __toModule(require_src());
+
+  // src/floor.js
   var import_supersimplelogger6 = __toModule(require_src());
-  var lg6 = (0, import_supersimplelogger6.default)("Game");
+  var lg6 = (0, import_supersimplelogger6.default)("Floor");
+  var Floor2 = class {
+    constructor(scene) {
+      this.scene = scene;
+      this.objs = [];
+      this.addSection();
+      this.addSection();
+      this.addSection();
+    }
+    addSection() {
+      let pos = 0;
+      if (this.objs.length > 0) {
+        pos = this.objs[this.objs.length - 1].position.z - FLOOR_DEPTH;
+      }
+      const fp = this.makeSection();
+      this.objs.push(fp);
+      fp.position.z = pos;
+      lg6("Floor panel added");
+    }
+    makeSection() {
+      const tempWidth = FLOOR_WIDTH + 2 * FLOOR_OVERHANG;
+      let prevVertices = null;
+      if (this.objs.length > 0) {
+        prevVertices = this.objs[this.objs.length - 1].geometry.attributes.position.array;
+      }
+      const nVxWide = Math.floor(tempWidth / FLOOR_SQ_SIZE) + 1;
+      const nVxLong = Math.floor(FLOOR_DEPTH / FLOOR_SQ_SIZE) + 1;
+      const lastRowVxNum = nVxWide * (nVxLong - 1);
+      const geometry = new PlaneGeometry(tempWidth, FLOOR_DEPTH, tempWidth / FLOOR_SQ_SIZE, FLOOR_DEPTH / FLOOR_SQ_SIZE);
+      const vertices = geometry.attributes.position.array;
+      for (let i = 0; i < vertices.length; i++) {
+        const zindex = i * 3 + 2;
+        if (prevVertices === null || i < lastRowVxNum) {
+          vertices[zindex] = Math.random() * 0.2;
+        } else {
+          vertices[zindex] = prevVertices[zindex - lastRowVxNum * 3];
+        }
+      }
+      geometry.computeVertexNormals();
+      const plane = new Mesh(geometry, new MeshPhongMaterial({
+        color: 4298323
+      }));
+      this.scene.add(plane);
+      plane.lookAt(new Vector3(0, 1, 0));
+      return plane;
+    }
+    removeSection(index) {
+      const [removed] = this.objs.splice(index, 1);
+      remove(removed, this.scene);
+      lg6("Floor panel removed");
+    }
+    tick(deltaTime) {
+      let toremove = null;
+      for (let i = 0; i < this.objs.length; i++) {
+        this.objs[i].position.z += PILLAR_SPEED * (deltaTime / 1e3);
+        if (this.objs[i].position.z > FLOOR_DEPTH) {
+          toremove = i;
+        }
+      }
+      if (toremove !== null) {
+        this.removeSection(toremove);
+        this.addSection();
+      }
+    }
+  };
+
+  // src/game.js
+  var lg7 = (0, import_supersimplelogger7.default)("Game");
   var ORBIT_CAM = false;
   var Game = class {
     constructor() {
@@ -81391,7 +81456,7 @@ return a / b;`;
       setup3(this.scene);
     }
     async setup() {
-      this.floor = addFloor(this.scene);
+      this.floor = new Floor2(this.scene);
       this.bird = await newBird(this.scene);
       this.pillars = new Pillars(this.scene);
       this.collisions = new Collisions(this.bird, this.pillars);
@@ -81399,14 +81464,12 @@ return a / b;`;
     }
     tick(data) {
       const { time: time2, deltaTime, controls } = data;
-      this.floor.position.z += PILLAR_SPEED * (deltaTime / 1e3);
-      while (this.floor.position.z > 0)
-        this.floor.position.z -= 1;
+      this.floor.tick(deltaTime);
       this.pillars.tick(time2, deltaTime);
       this.bird.tick(deltaTime, controls);
       this.camera.tick();
       if (this.collisions.tick()) {
-        lg6("Crashed!!");
+        lg7("Crashed!!");
         this.score += 1;
       }
     }
@@ -81428,9 +81491,9 @@ return a / b;`;
   };
 
   // src/app.js
-  var lg7 = (0, import_supersimplelogger7.default)("App");
+  var lg8 = (0, import_supersimplelogger8.default)("App");
   (async () => {
-    lg7("Started...");
+    lg8("Started...");
     setVersion();
     const ui = new UI();
     ui.hideMenu();
@@ -81438,7 +81501,7 @@ return a / b;`;
     setup();
     const game = await newGame();
     ui.hideloadingScreen();
-    lg7("Setup done");
+    lg8("Setup done");
     let prevtime = 0;
     const animate = (time2) => {
       game.stats.begin();
