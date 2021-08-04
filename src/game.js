@@ -1,5 +1,5 @@
 import * as Scene from './scene'
-import {Pillars} from './pillars'
+import {TreeManager} from './treeManager'
 import {newBird} from './bird'
 import {Collisions} from './collisions'
 import * as Lighting from './lighting'
@@ -29,8 +29,8 @@ class Game {
   async setup() {
     this.floor = new Floor(this.scene)
     this.bird = await newBird(this.scene)
-    this.pillars = new Pillars(this.scene)
-    this.collisions = new Collisions(this.bird, this.pillars)
+    this.trees = new TreeManager(this.scene)
+    this.collisions = new Collisions(this.bird, this.trees)
 
     // performs setup and adds custom tick method to camera
     Camera.setup(this.camera, this.bird.obj)
@@ -40,7 +40,7 @@ class Game {
     const {time, deltaTime, controls} = data
 
     this.floor.tick(deltaTime)
-    this.pillars.tick(time, deltaTime)
+    this.trees.tick(time, deltaTime)
 
     this.bird.tick(deltaTime, controls)
     this.camera.tick()

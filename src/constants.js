@@ -8,6 +8,14 @@ export const PILLAR_WIDTH = 0.5
 export const PILLAR_HEIGHT = 10
 export const PILLAR_COLOR = 0x66563c
 
+export const BRANCH_MIN_LENGTH = 1
+export const BRANCH_MAX_LENGTH = 4
+// as a proportion of the trunk height
+export const BRANCH_MIN_HEIGHT = 0.2
+export const BRANCH_MAX_HEIGHT = 0.9
+export const LEAF_CUBE_SIZE = 1.75
+export const LEAF_COLOR = 0x4d8042
+
 export const CAMERA_FOV = 75
 export const CAMERA_NEAR = 0.1
 export const CAMERA_FAR = 1000
@@ -30,7 +38,7 @@ export const BIRD_MAX_SPEED_X = 2 // m/s
 export const PILLAR_SPEED = 1.2 // m/s
 export const PILLAR_SPACING = 2 // m
 
-export const SHOW_BOUNDING_BOXES = false
+export const SHOW_BOUNDING_BOXES = true
 export const BOUNDING_BOX_COLOR = 0xff0000
 
 export const WEBCAM_VIDEO_SIZE = {

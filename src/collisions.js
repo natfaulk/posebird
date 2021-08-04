@@ -1,16 +1,16 @@
 export class Collisions {
-  constructor(bird, pillars) {
+  constructor(bird, trees) {
     this.bird = bird
-    this.pillars = pillars.pillars
+    this.trees = trees.trees
   }
 
   tick() {
     let collision = false
 
-    this.pillars.forEach(p => {
-      if (p.bb.intersectsBox(this.bird.bb)) {
+    this.trees.forEach(t => {
+      if (t.checkCollision(this.bird.bb)) {
         collision = true
-        p.obj.material.color.setHex(0x00FF00)
+        t.objs[0].material.color.setHex(0x00FF00)
       }
     })
 

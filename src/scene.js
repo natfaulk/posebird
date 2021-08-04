@@ -13,8 +13,8 @@ export const setup = (orbitControls = false) => {
   const camera = new THREE.PerspectiveCamera(CONSTS.CAMERA_FOV, window.innerWidth / window.innerHeight, CONSTS.CAMERA_NEAR, CONSTS.CAMERA_FAR)
   const renderer = new THREE.WebGLRenderer()
   const stats = Stats()
-  
-  scene.fog = new THREE.Fog(CONSTS.CAMERA_CLEAR_COLOR, 14, 16)
+
+  // scene.fog = new THREE.Fog(CONSTS.CAMERA_CLEAR_COLOR, 14, 16)
   
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.setClearColor(CONSTS.CAMERA_CLEAR_COLOR)

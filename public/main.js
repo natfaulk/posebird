@@ -1630,6 +1630,12 @@
   var smooth = (newV, oldV, f) => {
     return oldV * f + newV * (1 - f);
   };
+  var newPt = (_x2 = 0, _y2 = 0) => {
+    return { x: _x2, y: _y2 };
+  };
+  var randBetween = (a, b) => {
+    return Math.random() * (b - a) + a;
+  };
 
   // src/stats.js
   var Stats = class {
@@ -1735,6 +1741,12 @@
   var PILLAR_WIDTH = 0.5;
   var PILLAR_HEIGHT = 10;
   var PILLAR_COLOR = 6706748;
+  var BRANCH_MIN_LENGTH = 1;
+  var BRANCH_MAX_LENGTH = 4;
+  var BRANCH_MIN_HEIGHT = 0.2;
+  var BRANCH_MAX_HEIGHT = 0.9;
+  var LEAF_CUBE_SIZE = 1.75;
+  var LEAF_COLOR = 5079106;
   var CAMERA_FOV = 75;
   var CAMERA_NEAR = 0.1;
   var CAMERA_FAR = 1e3;
@@ -1751,7 +1763,7 @@
   var BIRD_MAX_SPEED_X = 2;
   var PILLAR_SPEED = 1.2;
   var PILLAR_SPACING = 2;
-  var SHOW_BOUNDING_BOXES = false;
+  var SHOW_BOUNDING_BOXES = true;
   var BOUNDING_BOX_COLOR = 16711680;
   var WEBCAM_VIDEO_SIZE = {
     x: 1280,
@@ -1842,9 +1854,6 @@
   // src/posedrawing.js
   var dist = (_p1, _p2) => {
     return Math.hypot(_p1.x - _p2.x, _p1.y - _p2.y);
-  };
-  var newPt = (_x2 = 0, _y2 = 0) => {
-    return { x: _x2, y: _y2 };
   };
   var toTuple = ({ y, x }) => {
     return [y, x];
@@ -79003,7 +79012,6 @@ return a / b;`;
     const camera = new PerspectiveCamera(CAMERA_FOV, window.innerWidth / window.innerHeight, CAMERA_NEAR, CAMERA_FAR);
     const renderer = new WebGLRenderer();
     const stats = stats_module_default();
-    scene.fog = new Fog(CAMERA_CLEAR_COLOR, 14, 16);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(CAMERA_CLEAR_COLOR);
     document.body.appendChild(renderer.domElement);
@@ -79025,7 +79033,7 @@ return a / b;`;
     };
   };
 
-  // src/pillars.js
+  // src/singleTree.js
   var import_supersimplelogger5 = __toModule(require_src());
 
   // src/objects.js
@@ -81143,16 +81151,18 @@ return a / b;`;
 
   // src/objects.js
   var lg4 = (0, import_supersimplelogger4.default)("Objects");
-  var addPillar = (scene, zposition = null) => {
-    if (zposition === null) {
-      zposition = -FLOOR_DEPTH / 2;
-    }
-    const pillar = new Mesh(new BoxGeometry(PILLAR_WIDTH, PILLAR_HEIGHT, PILLAR_WIDTH), new MeshPhongMaterial({
-      color: PILLAR_COLOR
+  var addTreeBox = (scene, w, h, d, col) => {
+    const box = new Mesh(new BoxGeometry(w, h, d), new MeshPhongMaterial({
+      color: col
     }));
-    scene.add(pillar);
-    pillar.position.set((Math.random() - 0.5) * FLOOR_WIDTH, PILLAR_HEIGHT / 2, zposition);
-    return pillar;
+    scene.add(box);
+    return box;
+  };
+  var addTreeWoodBox = (scene, w, h, d) => {
+    return addTreeBox(scene, w, h, d, PILLAR_COLOR);
+  };
+  var addTreeLeafBox = (scene, w, h, d) => {
+    return addTreeBox(scene, w, h, d, LEAF_COLOR);
   };
   var addBird = async (scene) => {
     const bird = await loadGltf("public/models/bird3.glb");
@@ -81177,72 +81187,131 @@ return a / b;`;
     });
   };
 
-  // src/pillars.js
-  var lg5 = (0, import_supersimplelogger5.default)("Pillars");
-  var Pillar = class {
-    constructor(scene, p2) {
+  // src/singleTree.js
+  var lg5 = (0, import_supersimplelogger5.default)("Tree");
+  var Tree = class {
+    constructor(scene) {
       this.scene = scene;
-      this.obj = p2;
-      this.bbHelper = new BoxHelper(p2, BOUNDING_BOX_COLOR);
-      scene.add(this.bbHelper);
+      this.objs = [];
+      this.position = newPt();
+      this.makeTree();
+      this.setupBoundingBox();
+      lg5("Added tree");
+    }
+    moveBy(xshift, yshift) {
+      this.objs.forEach((obj) => {
+        obj.position.x += xshift;
+        obj.position.z += yshift;
+      });
+      this.position.x += xshift;
+      this.position.y += yshift;
+      this.fixBB();
+    }
+    setPosition(x, y) {
+      const xshift = x - this.position.x;
+      const yshift = y - this.position.y;
+      this.moveBy(xshift, yshift);
+    }
+    makeTree() {
+      const trunk = addTreeWoodBox(this.scene, PILLAR_WIDTH, PILLAR_HEIGHT, PILLAR_WIDTH);
+      trunk.position.y = PILLAR_HEIGHT / 2;
+      this.objs.push(trunk);
+      const leaf = addTreeLeafBox(this.scene, LEAF_CUBE_SIZE, LEAF_CUBE_SIZE, LEAF_CUBE_SIZE);
+      leaf.position.y = PILLAR_HEIGHT;
+      this.objs.push(leaf);
+      for (let i = 0; i < 10; i++) {
+        const height = PILLAR_HEIGHT * randBetween(BRANCH_MIN_HEIGHT, BRANCH_MAX_HEIGHT);
+        const len = randBetween(BRANCH_MIN_LENGTH, BRANCH_MAX_LENGTH);
+        const ang = randBetween(0, 2 * Math.PI);
+        this.makeBranch(len, ang, height);
+      }
+    }
+    makeBranch(len, angle, height) {
+      const xshift = -Math.cos(angle) * len;
+      const yshift = Math.sin(angle) * len;
+      const branch = addTreeWoodBox(this.scene, len, PILLAR_WIDTH / 2, PILLAR_WIDTH / 2);
+      branch.position.x = xshift / 2;
+      branch.position.y = height;
+      branch.position.z = yshift / 2;
+      branch.rotation.y = angle;
+      const leaf = addTreeLeafBox(this.scene, LEAF_CUBE_SIZE, LEAF_CUBE_SIZE, LEAF_CUBE_SIZE);
+      leaf.position.x = xshift;
+      leaf.position.y = height;
+      leaf.position.z = yshift;
+      leaf.rotation.y = angle;
+      this.objs.push(leaf);
+      this.objs.push(branch);
+    }
+    setupBoundingBox() {
+      this.bbHelper = new BoxHelper(this.objs[0], BOUNDING_BOX_COLOR);
+      this.scene.add(this.bbHelper);
       this.bbHelper.visible = SHOW_BOUNDING_BOXES;
       this.bb = new Box3();
       this.bb.setFromObject(this.bbHelper);
     }
-    tick() {
+    fixBB() {
       this.bbHelper.update();
       this.bbHelper.geometry.computeBoundingBox();
       this.bb.setFromObject(this.bbHelper);
     }
     cleanup() {
       this.scene.remove(this.bbHelper);
-      remove(this.obj, this.scene);
-      lg5("Pillar removed");
+      this.objs.forEach((obj) => {
+        remove(obj, this.scene);
+      });
+      lg5("Tree removed");
+    }
+    checkCollision(bb) {
+      return this.bb.intersectsBox(bb);
     }
   };
-  var Pillars = class {
+
+  // src/treeManager.js
+  var TREE_ADD_POINT = -FLOOR_DEPTH;
+  var TreeManager = class {
     constructor(scene) {
       this.scene = scene;
-      this.pillars = [];
-      this.lastPillarTime = 0;
-      for (let i = 0; i < FLOOR_DEPTH / 2; i += PILLAR_SPACING) {
-        this.add(-i);
+      this.trees = [];
+      this.lastTreeTime = 0;
+      for (let i = 0; i > TREE_ADD_POINT; i -= PILLAR_SPACING) {
+        this.add(i);
       }
     }
-    add(zposition = null) {
-      const p2 = addPillar(this.scene, zposition);
-      const newPillar = new Pillar(this.scene, p2);
-      this.pillars.push(newPillar);
+    add(position = null) {
+      if (position === null)
+        position = TREE_ADD_POINT;
+      const t = new Tree(this.scene);
+      this.trees.push(t);
+      t.setPosition((Math.random() - 0.5) * FLOOR_WIDTH, position);
     }
     moveForward(deltaTime) {
       const toremove = [];
-      this.pillars.forEach((p2, i) => {
-        p2.obj.position.z += PILLAR_SPEED * (deltaTime / 1e3);
-        if (p2.obj.position.z > FLOOR_DEPTH / 2) {
+      this.trees.forEach((t, i) => {
+        t.moveBy(0, PILLAR_SPEED * (deltaTime / 1e3));
+        if (t.position.y > FLOOR_DEPTH) {
           toremove.push(i);
         }
-        p2.tick();
       });
       while (toremove.length) {
-        const [removed] = this.pillars.splice(toremove.pop(), 1);
+        const [removed] = this.trees.splice(toremove.pop(), 1);
         removed.cleanup();
       }
     }
     tick(time2, deltaTime) {
       this.moveForward(deltaTime);
-      let addPillar2 = false;
-      if (this.pillars.length > 0) {
-        const lastPillarPosition = this.pillars[this.pillars.length - 1].obj.position.z;
-        const pillarSpacing = -FLOOR_DEPTH / 2 + PILLAR_SPACING;
-        if (lastPillarPosition > pillarSpacing) {
-          addPillar2 = true;
+      let addTree = false;
+      if (this.trees.length > 0) {
+        const lastTreePosition = this.trees[this.trees.length - 1].position.y;
+        const treeSpacing = TREE_ADD_POINT + PILLAR_SPACING;
+        if (lastTreePosition > treeSpacing) {
+          addTree = true;
         }
       } else {
-        addPillar2 = true;
+        addTree = true;
       }
-      if (addPillar2) {
+      if (addTree) {
         this.add();
-        this.lastPillarTime = time2;
+        this.lastTreeTime = time2;
       }
     }
   };
@@ -81330,16 +81399,16 @@ return a / b;`;
 
   // src/collisions.js
   var Collisions = class {
-    constructor(bird, pillars) {
+    constructor(bird, trees) {
       this.bird = bird;
-      this.pillars = pillars.pillars;
+      this.trees = trees.trees;
     }
     tick() {
       let collision = false;
-      this.pillars.forEach((p2) => {
-        if (p2.bb.intersectsBox(this.bird.bb)) {
+      this.trees.forEach((t) => {
+        if (t.checkCollision(this.bird.bb)) {
           collision = true;
-          p2.obj.material.color.setHex(65280);
+          t.objs[0].material.color.setHex(65280);
         }
       });
       return collision;
@@ -81458,14 +81527,14 @@ return a / b;`;
     async setup() {
       this.floor = new Floor2(this.scene);
       this.bird = await newBird(this.scene);
-      this.pillars = new Pillars(this.scene);
-      this.collisions = new Collisions(this.bird, this.pillars);
+      this.trees = new TreeManager(this.scene);
+      this.collisions = new Collisions(this.bird, this.trees);
       setup4(this.camera, this.bird.obj);
     }
     tick(data) {
       const { time: time2, deltaTime, controls } = data;
       this.floor.tick(deltaTime);
-      this.pillars.tick(time2, deltaTime);
+      this.trees.tick(time2, deltaTime);
       this.bird.tick(deltaTime, controls);
       this.camera.tick();
       if (this.collisions.tick()) {
