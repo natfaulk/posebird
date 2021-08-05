@@ -43,7 +43,7 @@ class Game {
     this.trees.tick(time, deltaTime)
 
     this.bird.tick(deltaTime, controls)
-    this.camera.tick()
+    if (!ORBIT_CAM) this.camera.tick()
 
     if (this.collisions.tick()) {
       lg('Crashed!!')

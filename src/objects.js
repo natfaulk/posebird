@@ -6,7 +6,7 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
 
 const lg = makeLogger('Objects')
 
-const addTreeBox = (scene, w, h, d, col) => {
+const addTreeBox = (w, h, d, col) => {
   const box = new THREE.Mesh(
     new THREE.BoxGeometry(w, h, d),
     new THREE.MeshPhongMaterial({
@@ -14,16 +14,15 @@ const addTreeBox = (scene, w, h, d, col) => {
     })
   )
 
-  scene.add(box)
   return box
 }
 
-export const addTreeWoodBox = (scene, w, h, d) => {
-  return addTreeBox(scene, w, h, d, CONSTS.PILLAR_COLOR)
+export const addTreeWoodBox = (w, h, d) => {
+  return addTreeBox(w, h, d, CONSTS.PILLAR_COLOR)
 }
 
-export const addTreeLeafBox = (scene, w, h, d) => {
-  return addTreeBox(scene, w, h, d, CONSTS.LEAF_COLOR)
+export const addTreeLeafBox = (w, h, d) => {
+  return addTreeBox(w, h, d, CONSTS.LEAF_COLOR)
 }
 
 export const addBird = async scene => {

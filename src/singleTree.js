@@ -9,6 +9,7 @@ const lg = makeLogger('Tree')
 export class Tree {
   constructor(scene) {
     this.scene = scene
+    this.trunk = null
     this.objs = []
     this.position = newPt()
 
@@ -19,50 +20,52 @@ export class Tree {
   }
 
   moveBy(xshift, yshift) {
-    this.objs.forEach(obj => {
-      obj.position.x += xshift
-      obj.position.z += yshift
-    })
-
-    this.position.x += xshift
-    this.position.y += yshift
+    this.trunk.position.x += xshift
+    this.trunk.position.z += yshift
 
     this.fixBB()
+
+    this.position.x = this.trunk.position.x
+    this.position.y = this.trunk.position.z
   }
 
   setPosition(x, y) {
-    const xshift = x - this.position.x
-    const yshift = y - this.position.y
+    this.trunk.position.x = x
+    this.trunk.position.z = y
 
-    this.moveBy(xshift, yshift)
+    this.fixBB()
+
+    this.position.x = this.trunk.position.x
+    this.position.y = this.trunk.position.z
   }
 
   makeTree() {
     const trunk = Objects.addTreeWoodBox(
-      this.scene,
       CONSTS.PILLAR_WIDTH,
       CONSTS.PILLAR_HEIGHT,
       CONSTS.PILLAR_WIDTH
     )
     trunk.position.y = CONSTS.PILLAR_HEIGHT / 2
-    
-    this.objs.push(trunk)
+    this.trunk = trunk
+    this.scene.add(trunk)
     
     // leaf blob on top of trunk
     const leaf = Objects.addTreeLeafBox(
-      this.scene,
       CONSTS.LEAF_CUBE_SIZE,
       CONSTS.LEAF_CUBE_SIZE,
       CONSTS.LEAF_CUBE_SIZE
     )
-    leaf.position.y = CONSTS.PILLAR_HEIGHT
+    // zero point is halfway up trunk
+    leaf.position.y = CONSTS.PILLAR_HEIGHT / 2
+    trunk.add(leaf)
     this.objs.push(leaf)
   
     for (let i = 0; i < 10; i++) {
       const height = CONSTS.PILLAR_HEIGHT * randBetween(
         CONSTS.BRANCH_MIN_HEIGHT,
         CONSTS.BRANCH_MAX_HEIGHT
-      )
+      // zero point is halfway up trunk
+      ) - CONSTS.PILLAR_HEIGHT / 2
       const len = randBetween(CONSTS.BRANCH_MIN_LENGTH, CONSTS.BRANCH_MAX_LENGTH)
       const ang = randBetween(0, 2 * Math.PI)
       
@@ -76,7 +79,6 @@ export class Tree {
     const yshift = Math.sin(angle) * len
   
     const branch = Objects.addTreeWoodBox(
-      this.scene,
       len,
       CONSTS.PILLAR_WIDTH / 2,
       CONSTS.PILLAR_WIDTH / 2,
@@ -88,7 +90,6 @@ export class Tree {
     branch.rotation.y = angle
   
     const leaf = Objects.addTreeLeafBox(
-      this.scene,
       CONSTS.LEAF_CUBE_SIZE,
       CONSTS.LEAF_CUBE_SIZE,
       CONSTS.LEAF_CUBE_SIZE
@@ -101,10 +102,13 @@ export class Tree {
   
     this.objs.push(leaf)
     this.objs.push(branch)
+
+    this.trunk.add(leaf)
+    this.trunk.add(branch)
   }
 
   setupBoundingBox() {
-    this.bbHelper = new THREE.BoxHelper(this.objs[0], CONSTS.BOUNDING_BOX_COLOR)
+    this.bbHelper = new THREE.BoxHelper(this.trunk, CONSTS.BOUNDING_BOX_COLOR)
     this.scene.add(this.bbHelper)
     this.bbHelper.visible = CONSTS.SHOW_BOUNDING_BOXES
 
@@ -122,9 +126,12 @@ export class Tree {
 
   cleanup() {
     this.scene.remove(this.bbHelper)
+    // remove leaves and branches
     this.objs.forEach(obj => {
-      Objects.remove(obj, this.scene)
+      Objects.remove(obj, this.trunk)
     })
+    // remove trunk
+    Objects.remove(this.trunk, this.scene)
     lg('Tree removed')
   }
 
