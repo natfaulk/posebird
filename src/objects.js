@@ -39,8 +39,9 @@ export const addBird = async scene => {
 }
 
 export const remove = (obj, scene) => {
-  obj.geometry.dispose()
-  obj.material.dispose()
+  // group objects don't have geometry or material
+  if (obj.geometry !== undefined) obj.geometry.dispose()
+  if (obj.material !== undefined) obj.material.dispose()
   scene.remove(obj)
 }
 

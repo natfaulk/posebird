@@ -1763,7 +1763,8 @@
   var BIRD_MAX_SPEED_X = 2;
   var PILLAR_SPEED = 1.2;
   var PILLAR_SPACING = 2;
-  var SHOW_BOUNDING_BOXES = true;
+  var FOG_ENABLED = true;
+  var SHOW_BOUNDING_BOXES = false;
   var BOUNDING_BOX_COLOR = 16711680;
   var WEBCAM_VIDEO_SIZE = {
     x: 1280,
@@ -79012,6 +79013,8 @@ return a / b;`;
     const camera = new PerspectiveCamera(CAMERA_FOV, window.innerWidth / window.innerHeight, CAMERA_NEAR, CAMERA_FAR);
     const renderer = new WebGLRenderer();
     const stats = stats_module_default();
+    if (FOG_ENABLED)
+      scene.fog = new Fog(CAMERA_CLEAR_COLOR, 18, 25);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(CAMERA_CLEAR_COLOR);
     document.body.appendChild(renderer.domElement);
@@ -81170,8 +81173,10 @@ return a / b;`;
     return bird;
   };
   var remove = (obj, scene) => {
-    obj.geometry.dispose();
-    obj.material.dispose();
+    if (obj.geometry !== void 0)
+      obj.geometry.dispose();
+    if (obj.material !== void 0)
+      obj.material.dispose();
     scene.remove(obj);
   };
   var loadGltf = (path) => {
@@ -81188,43 +81193,64 @@ return a / b;`;
 
   // src/singleTree.js
   var lg5 = (0, import_supersimplelogger5.default)("Tree");
+  var TreeSubpart = class {
+    constructor(scene, obj) {
+      this.scene = scene;
+      this.obj = obj;
+      this.scene.add(this.obj);
+      this.setupBoundingBox();
+    }
+    setupBoundingBox() {
+      this.bbHelper = new BoxHelper(this.obj, BOUNDING_BOX_COLOR);
+      this.scene.add(this.bbHelper);
+      this.bbHelper.visible = SHOW_BOUNDING_BOXES;
+      this.bb = new Box3();
+      this.bb.setFromObject(this.bbHelper);
+    }
+    cleanup() {
+      this.scene.remove(this.bbHelper);
+      remove(this.obj, this.scene);
+    }
+    fixBB() {
+      this.bbHelper.update();
+      this.bbHelper.geometry.computeBoundingBox();
+      this.bb.setFromObject(this.bbHelper);
+    }
+  };
   var Tree = class {
     constructor(scene) {
       this.scene = scene;
-      this.trunk = null;
+      this.group = new TreeSubpart(this.scene, new Group());
       this.objs = [];
       this.position = newPt();
       this.makeTree();
-      this.setupBoundingBox();
       lg5("Added tree");
     }
     moveBy(xshift, yshift) {
-      this.trunk.position.x += xshift;
-      this.trunk.position.z += yshift;
-      this.fixBB();
-      this.position.x = this.trunk.position.x;
-      this.position.y = this.trunk.position.z;
+      this.group.obj.position.x += xshift;
+      this.group.obj.position.z += yshift;
+      this.group.fixBB();
+      this.position.x = this.group.obj.position.x;
+      this.position.y = this.group.obj.position.z;
     }
     setPosition(x, y) {
-      this.trunk.position.x = x;
-      this.trunk.position.z = y;
-      this.fixBB();
-      this.position.x = this.trunk.position.x;
-      this.position.y = this.trunk.position.z;
+      this.group.obj.position.x = x;
+      this.group.obj.position.z = y;
+      this.group.fixBB();
+      this.position.x = this.group.obj.position.x;
+      this.position.y = this.group.obj.position.z;
     }
     makeTree() {
       const trunk = addTreeWoodBox(PILLAR_WIDTH, PILLAR_HEIGHT, PILLAR_WIDTH);
       trunk.position.y = PILLAR_HEIGHT / 2;
-      this.trunk = trunk;
-      this.scene.add(trunk);
+      this.objs.push(new TreeSubpart(this.group.obj, trunk));
       const leaf = addTreeLeafBox(LEAF_CUBE_SIZE, LEAF_CUBE_SIZE, LEAF_CUBE_SIZE);
-      leaf.position.y = PILLAR_HEIGHT / 2;
-      trunk.add(leaf);
-      this.objs.push(leaf);
+      leaf.position.y = PILLAR_HEIGHT;
+      this.objs.push(new TreeSubpart(this.group.obj, leaf));
       for (let i = 0; i < 10; i++) {
-        const height = PILLAR_HEIGHT * randBetween(BRANCH_MIN_HEIGHT, BRANCH_MAX_HEIGHT) - PILLAR_HEIGHT / 2;
+        const height = PILLAR_HEIGHT * randBetween(BRANCH_MIN_HEIGHT, BRANCH_MAX_HEIGHT);
         const len = randBetween(BRANCH_MIN_LENGTH, BRANCH_MAX_LENGTH);
-        const ang = randBetween(0, 2 * Math.PI);
+        const ang = Math.floor(randBetween(0, 4)) * Math.PI / 2;
         this.makeBranch(len, ang, height);
       }
     }
@@ -81241,33 +81267,31 @@ return a / b;`;
       leaf.position.y = height;
       leaf.position.z = yshift;
       leaf.rotation.y = angle;
-      this.objs.push(leaf);
-      this.objs.push(branch);
-      this.trunk.add(leaf);
-      this.trunk.add(branch);
-    }
-    setupBoundingBox() {
-      this.bbHelper = new BoxHelper(this.trunk, BOUNDING_BOX_COLOR);
-      this.scene.add(this.bbHelper);
-      this.bbHelper.visible = SHOW_BOUNDING_BOXES;
-      this.bb = new Box3();
-      this.bb.setFromObject(this.bbHelper);
-    }
-    fixBB() {
-      this.bbHelper.update();
-      this.bbHelper.geometry.computeBoundingBox();
-      this.bb.setFromObject(this.bbHelper);
+      this.objs.push(new TreeSubpart(this.group.obj, leaf));
+      this.objs.push(new TreeSubpart(this.group.obj, branch));
+      this.group.obj.add(leaf);
+      this.group.obj.add(branch);
     }
     cleanup() {
-      this.scene.remove(this.bbHelper);
       this.objs.forEach((obj) => {
-        remove(obj, this.trunk);
+        obj.cleanup();
       });
-      remove(this.trunk, this.scene);
+      this.group.cleanup();
       lg5("Tree removed");
     }
     checkCollision(bb) {
-      return this.bb.intersectsBox(bb);
+      if (!this.group.bb.intersectsBox(bb))
+        return false;
+      const bbAdj = bb.clone();
+      bbAdj.min.sub(this.group.obj.position);
+      bbAdj.max.sub(this.group.obj.position);
+      for (let i = 0; i < this.objs.length; i++) {
+        if (this.objs[i].bb.intersectsBox(bbAdj)) {
+          this.objs[i].obj.material.color.setHex(65280);
+          return true;
+        }
+      }
+      return false;
     }
   };
 
@@ -81307,7 +81331,7 @@ return a / b;`;
       let addTree = false;
       if (this.trees.length > 0) {
         const lastTreePosition = this.trees[this.trees.length - 1].position.y;
-        const treeSpacing = TREE_ADD_POINT + PILLAR_SPACING * 5;
+        const treeSpacing = TREE_ADD_POINT + PILLAR_SPACING;
         if (lastTreePosition > treeSpacing) {
           addTree = true;
         }
@@ -81413,7 +81437,6 @@ return a / b;`;
       this.trees.forEach((t) => {
         if (t.checkCollision(this.bird.bb)) {
           collision = true;
-          t.trunk.material.color.setHex(65280);
         }
       });
       return collision;

@@ -35,9 +35,6 @@ export class TreeManager {
       if (t.position.y > CONSTS.FLOOR_DEPTH) {
         toremove.push(i)
       }
-
-      // update bounding boxes
-      // t.tick()
     })
 
     while (toremove.length) {
@@ -52,7 +49,7 @@ export class TreeManager {
     let addTree = false
     if (this.trees.length > 0) {
       const lastTreePosition = this.trees[this.trees.length - 1].position.y
-      const treeSpacing = TREE_ADD_POINT + CONSTS.PILLAR_SPACING 
+      const treeSpacing = TREE_ADD_POINT + CONSTS.PILLAR_SPACING
 
       if (lastTreePosition > treeSpacing) {
         addTree = true

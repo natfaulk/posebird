@@ -6,37 +6,69 @@ import * as THREE from 'three'
 
 const lg = makeLogger('Tree')
 
+class TreeSubpart {
+  constructor(scene, obj) {
+    this.scene = scene
+    this.obj = obj
+    this.scene.add(this.obj)
+    
+    this.setupBoundingBox()
+  }
+
+  setupBoundingBox() {
+    this.bbHelper = new THREE.BoxHelper(this.obj, CONSTS.BOUNDING_BOX_COLOR)
+    this.scene.add(this.bbHelper)
+    this.bbHelper.visible = CONSTS.SHOW_BOUNDING_BOXES
+
+    this.bb = new THREE.Box3()
+    this.bb.setFromObject(this.bbHelper)
+  }
+
+  cleanup() {
+    this.scene.remove(this.bbHelper)
+    Objects.remove(this.obj, this.scene)
+  }
+
+  fixBB() {
+    this.bbHelper.update()
+    // seems to be a bug in the three js library where the bounding sphere
+    // is updated instead of the bounding box, so call it manually
+    this.bbHelper.geometry.computeBoundingBox()
+    this.bb.setFromObject(this.bbHelper)
+  }
+}
+
 export class Tree {
   constructor(scene) {
     this.scene = scene
-    this.trunk = null
+    this.group = new TreeSubpart(this.scene, new THREE.Group())
+    
     this.objs = []
     this.position = newPt()
 
     this.makeTree()
-    this.setupBoundingBox()
 
     lg('Added tree')
   }
 
   moveBy(xshift, yshift) {
-    this.trunk.position.x += xshift
-    this.trunk.position.z += yshift
+    this.group.obj.position.x += xshift
+    this.group.obj.position.z += yshift
 
-    this.fixBB()
+    this.group.fixBB()
 
-    this.position.x = this.trunk.position.x
-    this.position.y = this.trunk.position.z
+    this.position.x = this.group.obj.position.x
+    this.position.y = this.group.obj.position.z
   }
 
   setPosition(x, y) {
-    this.trunk.position.x = x
-    this.trunk.position.z = y
+    this.group.obj.position.x = x
+    this.group.obj.position.z = y
 
-    this.fixBB()
+    this.group.fixBB()
 
-    this.position.x = this.trunk.position.x
-    this.position.y = this.trunk.position.z
+    this.position.x = this.group.obj.position.x
+    this.position.y = this.group.obj.position.z
   }
 
   makeTree() {
@@ -46,8 +78,7 @@ export class Tree {
       CONSTS.PILLAR_WIDTH
     )
     trunk.position.y = CONSTS.PILLAR_HEIGHT / 2
-    this.trunk = trunk
-    this.scene.add(trunk)
+    this.objs.push(new TreeSubpart(this.group.obj, trunk))
     
     // leaf blob on top of trunk
     const leaf = Objects.addTreeLeafBox(
@@ -56,18 +87,18 @@ export class Tree {
       CONSTS.LEAF_CUBE_SIZE
     )
     // zero point is halfway up trunk
-    leaf.position.y = CONSTS.PILLAR_HEIGHT / 2
-    trunk.add(leaf)
-    this.objs.push(leaf)
+    leaf.position.y = CONSTS.PILLAR_HEIGHT
+    this.objs.push(new TreeSubpart(this.group.obj, leaf))
   
     for (let i = 0; i < 10; i++) {
       const height = CONSTS.PILLAR_HEIGHT * randBetween(
         CONSTS.BRANCH_MIN_HEIGHT,
         CONSTS.BRANCH_MAX_HEIGHT
-      // zero point is halfway up trunk
-      ) - CONSTS.PILLAR_HEIGHT / 2
+      )
       const len = randBetween(CONSTS.BRANCH_MIN_LENGTH, CONSTS.BRANCH_MAX_LENGTH)
-      const ang = randBetween(0, 2 * Math.PI)
+      // limit to 90 degree increments for now
+      // so can use AABB collisions
+      const ang = Math.floor(randBetween(0, 4)) * Math.PI / 2
       
       this.makeBranch(len, ang, height)
     }
@@ -100,42 +131,40 @@ export class Tree {
     leaf.position.z = yshift
     leaf.rotation.y = angle
   
-    this.objs.push(leaf)
-    this.objs.push(branch)
+    this.objs.push(new TreeSubpart(this.group.obj, leaf))
+    this.objs.push(new TreeSubpart(this.group.obj, branch))
 
-    this.trunk.add(leaf)
-    this.trunk.add(branch)
-  }
-
-  setupBoundingBox() {
-    this.bbHelper = new THREE.BoxHelper(this.trunk, CONSTS.BOUNDING_BOX_COLOR)
-    this.scene.add(this.bbHelper)
-    this.bbHelper.visible = CONSTS.SHOW_BOUNDING_BOXES
-
-    this.bb = new THREE.Box3()
-    this.bb.setFromObject(this.bbHelper)
-  }
-
-  fixBB() {
-    this.bbHelper.update()
-    // seems to be a bug in the three js library where the bounding sphere
-    // is updated instead of the bounding box, so call it manually
-    this.bbHelper.geometry.computeBoundingBox()
-    this.bb.setFromObject(this.bbHelper)
+    this.group.obj.add(leaf)
+    this.group.obj.add(branch)
   }
 
   cleanup() {
-    this.scene.remove(this.bbHelper)
     // remove leaves and branches
     this.objs.forEach(obj => {
-      Objects.remove(obj, this.trunk)
+      obj.cleanup()        
     })
-    // remove trunk
-    Objects.remove(this.trunk, this.scene)
+    this.group.cleanup()
     lg('Tree removed')
   }
 
   checkCollision(bb) {
-    return this.bb.intersectsBox(bb)
+    // broad phase tree AABB collision detection
+    if (!this.group.bb.intersectsBox(bb)) return false
+
+    // the sub bounding boxes are realtive to the tree position
+    // make a cloned bird bb and adjust it so its origin is relative to the tree.
+    const bbAdj = bb.clone()
+    bbAdj.min.sub(this.group.obj.position)
+    bbAdj.max.sub(this.group.obj.position)
+
+    // narrower phase AABB collsiion of each part of the tree
+    for (let i = 0; i < this.objs.length; i++) {
+      if (this.objs[i].bb.intersectsBox(bbAdj)) {
+        this.objs[i].obj.material.color.setHex(0x00FF00)
+        return true
+      }
+    }
+
+    return false
   }
 }

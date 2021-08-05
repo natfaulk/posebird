@@ -38,7 +38,8 @@ export const BIRD_MAX_SPEED_X = 2 // m/s
 export const PILLAR_SPEED = 1.2 // m/s
 export const PILLAR_SPACING = 2 // m
 
-export const SHOW_BOUNDING_BOXES = true
+export const FOG_ENABLED = true
+export const SHOW_BOUNDING_BOXES = false
 export const BOUNDING_BOX_COLOR = 0xff0000
 
 export const WEBCAM_VIDEO_SIZE = {

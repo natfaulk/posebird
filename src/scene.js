@@ -14,7 +14,7 @@ export const setup = (orbitControls = false) => {
   const renderer = new THREE.WebGLRenderer()
   const stats = Stats()
 
-  // scene.fog = new THREE.Fog(CONSTS.CAMERA_CLEAR_COLOR, 14, 16)
+  if (CONSTS.FOG_ENABLED) scene.fog = new THREE.Fog(CONSTS.CAMERA_CLEAR_COLOR, 18, 25)
   
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.setClearColor(CONSTS.CAMERA_CLEAR_COLOR)

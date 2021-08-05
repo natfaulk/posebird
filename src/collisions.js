@@ -10,7 +10,6 @@ export class Collisions {
     this.trees.forEach(t => {
       if (t.checkCollision(this.bird.bb)) {
         collision = true
-        t.trunk.material.color.setHex(0x00FF00)
       }
     })
 
