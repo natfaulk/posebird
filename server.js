@@ -8,7 +8,7 @@ const SETTINGS_FILE = 'settings.json'
 const app = express()
 let port = 3000
 
-app.use('/public', express.static('public'))
+app.use('/public', express.static('public', {maxAge: '7d'}))
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'))
 })
