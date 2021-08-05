@@ -1,6 +1,7 @@
 const MENU_ID = 'menu-overlay'
 const PLAY_ID = 'play-button'
 const LOADING_ID = 'loading'
+const USE_CHROME_ID = 'use-chrome'
 
 import {Stats} from './stats'
 
@@ -47,4 +48,12 @@ export class UI {
   hideloadingScreen() {
     document.getElementById(LOADING_ID).style.visibility = 'hidden'
   }
+}
+
+export const hideUseChromeAlert = () => {
+  document.getElementById(USE_CHROME_ID).style.visibility = 'hidden'
+}
+
+export const showUseChromeAlert = () => {
+  document.getElementById(USE_CHROME_ID).style.visibility = 'visible'
 }

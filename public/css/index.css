@@ -48,6 +48,7 @@ div#info {
   bottom: 0;
   background-color: white;
   color: gray;
+  z-index: 5;
 }
 
 div#info a {
@@ -66,4 +67,16 @@ div#loading {
   justify-content: center;
   align-items: center;
   font-size: 10vw;
+}
+
+div#use-chrome {
+  visibility: hidden;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: orangered;
+  color: white;
+  font-size: medium;
+  z-index: 4;
 }

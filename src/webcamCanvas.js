@@ -1,11 +1,21 @@
 import {WEBCAM_MIRROR_CAMERA, WEBCAM_VIDEO_SIZE} from './constants'
 import Mindrawing from 'mindrawingjs'
 import {drawAll} from './posedrawing'
+import makeLogger from '@natfaulk/supersimplelogger'
+import {showUseChromeAlert} from './ui'
+
+const lg = makeLogger('WebcamCanvas')
 
 export class WebcamCanvas {
   constructor() {
     this.d = canvasSetup()
-    this.posecanvas = new OffscreenCanvas(WEBCAM_VIDEO_SIZE.x, WEBCAM_VIDEO_SIZE.y)
+    try {
+      this.posecanvas = new OffscreenCanvas(WEBCAM_VIDEO_SIZE.x, WEBCAM_VIDEO_SIZE.y)
+    } catch {
+      lg('No offscreen canvas implementation, for best results use chrome')
+      this.posecanvas = null
+      showUseChromeAlert()
+    }
   }
 
   async draw(frame, poses) {
@@ -24,11 +34,19 @@ export class WebcamCanvas {
 
     // draw poses
     if (poses.length > 0) {
-      const ctx2 = this.posecanvas.getContext('2d')
-      ctx2.clearRect(0, 0, this.posecanvas.width, this.posecanvas.height)
-      drawAll(ctx2, poses)
-
-      ctx.drawImage(this.posecanvas, 0, 0, this.d.width, this.d.height)
+      if (this.posecanvas !== null) {
+        const ctx2 = this.posecanvas.getContext('2d')
+        ctx2.clearRect(0, 0, this.posecanvas.width, this.posecanvas.height)
+        drawAll(ctx2, poses)
+  
+        ctx.drawImage(this.posecanvas, 0, 0, this.d.width, this.d.height)
+      } else {
+        const hscale = this.d.width / WEBCAM_VIDEO_SIZE.x
+        const vscale = this.d.height / WEBCAM_VIDEO_SIZE.y
+        ctx.setTransform(hscale, 0, 0, vscale, 0, 0)
+        drawAll(ctx, poses)
+        ctx.setTransform(-hscale, 0, 0, -vscale, 0, 0)
+      }
     }
   }
 }
