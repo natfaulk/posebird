@@ -7,8 +7,9 @@
     "buildprod": "esbuild src/app.js --bundle --minify --sourcemap --outfile=public/main.js",
     "builddev": "esbuild src/app.js --bundle --sourcemap --outfile=public/main.js",
     "watch": "npm run builddev -- --watch",
-    "dev-server": "node devserver.js",
-    "dev": "run-p watch dev-server"
+    "server": "node server.js",
+    "dev": "run-p watch server",
+    "prod": "npm run server"
   },
   "author": "",
   "license": "ISC",
