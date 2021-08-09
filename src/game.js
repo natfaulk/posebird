@@ -4,6 +4,7 @@ import {newBird} from './bird'
 import {Collisions} from './collisions'
 import * as Lighting from './lighting'
 import * as Camera from './camera'
+import * as CONSTS from './constants'
 
 import makeLogger from '@natfaulk/supersimplelogger'
 import {Floor} from './floor'
@@ -48,10 +49,10 @@ class Game {
 
     if (this.collisions.tick()) {
       lg('Crashed!!')
-      this.score += 1
-
       return true
     }
+
+    this.score += (deltaTime / 1000) * CONSTS.PILLAR_SPEED
 
     return false
   }

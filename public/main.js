@@ -1700,6 +1700,7 @@
   var LOADING_ID = "loading";
   var USE_CHROME_ID = "use-chrome";
   var INTRO_ID = "intro-overlay-child";
+  var PREV_SCORE_ID = "previous-score";
   var UI = class {
     constructor() {
       this.playClicked = null;
@@ -1713,7 +1714,10 @@
         this.hideMenu();
       });
       this.stats = new Stats();
-      this.stats.addStat("score");
+      this.stats.addStat("score", {
+        fixed: 0,
+        prettyLabel: "Score"
+      });
       this.stats.addStat("poseFPS", {
         smoothing: 0.5,
         fixed: 2,
@@ -1763,6 +1767,10 @@
           resolve();
         }, (maxN + 2) * delay);
       });
+    }
+    setPreviousScore(score) {
+      const el = document.getElementById(PREV_SCORE_ID);
+      el.innerHTML = `Previous Score: ${Math.round(score)}`;
     }
   };
   var flashMessage = (el, delay, n) => {
@@ -81670,9 +81678,9 @@ return a / b;`;
         this.camera.tick();
       if (this.collisions.tick()) {
         lg10("Crashed!!");
-        this.score += 1;
         return true;
       }
+      this.score += deltaTime / 1e3 * PILLAR_SPEED;
       return false;
     }
     render() {
@@ -81715,6 +81723,8 @@ return a / b;`;
     ui.hideloadingScreen();
     lg11("Setup done");
     const reset = async () => {
+      if (game.score > 0)
+        ui.setPreviousScore(game.score);
       game.reset();
       game.render();
       await ui.showMenu();

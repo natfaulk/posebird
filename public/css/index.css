@@ -43,6 +43,11 @@ div.menu-button {
   margin: 1rem;
 }
 
+div#previous-score {
+  background-color: white;
+  font-size: 2em;
+}
+
 div#pose-debug {
   position: absolute;
   left: 0;

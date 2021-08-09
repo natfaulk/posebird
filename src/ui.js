@@ -7,6 +7,7 @@ const PLAY_ID = 'play-button'
 const LOADING_ID = 'loading'
 const USE_CHROME_ID = 'use-chrome'
 const INTRO_ID = 'intro-overlay-child'
+const PREV_SCORE_ID = 'previous-score'
 
 import {Stats} from './stats'
 
@@ -30,7 +31,10 @@ export class UI {
 
     this.stats = new Stats
 
-    this.stats.addStat('score')
+    this.stats.addStat('score', {
+      fixed: 0,
+      prettyLabel: 'Score'
+    })
     this.stats.addStat('poseFPS', {
       smoothing: 0.5,
       fixed: 2,
@@ -91,6 +95,10 @@ export class UI {
     })
   }
 
+  setPreviousScore(score) {
+    const el = document.getElementById(PREV_SCORE_ID)
+    el.innerHTML = `Previous Score: ${Math.round(score)}`
+  }
 }
 
 const flashMessage = (el, delay, n) => {

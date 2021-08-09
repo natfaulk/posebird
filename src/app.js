@@ -32,6 +32,9 @@ const lg = makeLogger('App')
   lg('Setup done')
 
   const reset = async () => {
+    // Don't show if first time playing
+    // scores currently don't persist between refreshes
+    if (game.score > 0) ui.setPreviousScore(game.score)
     game.reset()
     // render first frame - can use as a background
     game.render()
