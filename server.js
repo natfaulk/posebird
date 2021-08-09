@@ -23,7 +23,7 @@ if (fs.existsSync(SETTINGS_FILE)) {
 
 // disable caching on dev mode
 const staticConfig = {}
-if (!dev) staticConfig.maxAge = '7d'
+if (!dev) staticConfig.maxAge = '1d'
 
 app.use('/public', express.static('public', staticConfig))
 app.get('/', (req, res) => {
