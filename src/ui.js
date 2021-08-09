@@ -35,6 +35,9 @@ export class UI {
       fixed: 0,
       prettyLabel: 'Score'
     })
+    this.stats.addStat('speed', {
+      prettyLabel: 'Speed'
+    })
     this.stats.addStat('poseFPS', {
       smoothing: 0.5,
       fixed: 2,

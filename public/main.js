@@ -1718,6 +1718,9 @@
         fixed: 0,
         prettyLabel: "Score"
       });
+      this.stats.addStat("speed", {
+        prettyLabel: "Speed"
+      });
       this.stats.addStat("poseFPS", {
         smoothing: 0.5,
         fixed: 2,
@@ -1808,8 +1811,10 @@
   var BIRD_INIT_POS_Y = CAMERA_POS_Y + CAMERA_BIRD_OFFSET_Y;
   var BIRD_INIT_POS_Z = CAMERA_POS_Z + CAMERA_BIRD_OFFSET_Z;
   var BIRD_MAX_SPEED_X = 2;
-  var PILLAR_SPEED = 1.2;
-  var PILLAR_SPACING = 2;
+  var INITIAL_BIRD_SPEED = 1.2;
+  var BIRD_SPEED_INCREMENT = 0.1;
+  var BIRD_SPEED_INC_DIST = 10;
+  var TREE_SPACING = 2;
   var FOG_ENABLED = true;
   var SHOW_BOUNDING_BOXES = false;
   var BOUNDING_BOX_COLOR = 16711680;
@@ -81395,7 +81400,7 @@ return a / b;`;
       this.addInitialTrees();
     }
     addInitialTrees() {
-      for (let i = -3; i > TREE_ADD_POINT; i -= PILLAR_SPACING * 2) {
+      for (let i = -3; i > TREE_ADD_POINT; i -= TREE_SPACING * 2) {
         this.add(i);
         this.add(i, l_edge - FLOOR_OVERHANG, l_edge);
         this.add(i, r_edge, r_edge + FLOOR_OVERHANG);
@@ -81421,10 +81426,10 @@ return a / b;`;
       const xpos = randBetween(xmin, xmax);
       t.setPosition(xpos, zposition);
     }
-    moveForward(deltaTime) {
+    moveForward(deltaTime, birdSpeed) {
       const toremove = [];
       this.trees.forEach((t, i) => {
-        t.moveBy(0, PILLAR_SPEED * (deltaTime / 1e3));
+        t.moveBy(0, birdSpeed * (deltaTime / 1e3));
         if (t.position.y > FLOOR_DEPTH) {
           toremove.push(i);
         }
@@ -81434,12 +81439,12 @@ return a / b;`;
         removed.cleanup();
       }
     }
-    tick(time2, deltaTime) {
-      this.moveForward(deltaTime);
+    tick(time2, deltaTime, birdSpeed) {
+      this.moveForward(deltaTime, birdSpeed);
       let addTree = false;
       if (this.trees.length > 0) {
         const lastTreePosition = this.trees[this.trees.length - 1].position.y;
-        const treeSpacing = TREE_ADD_POINT + PILLAR_SPACING;
+        const treeSpacing = TREE_ADD_POINT + TREE_SPACING;
         if (lastTreePosition > treeSpacing) {
           addTree = true;
         }
@@ -81646,10 +81651,10 @@ return a / b;`;
       remove(removed, this.scene);
       lg9("Floor panel removed");
     }
-    tick(deltaTime) {
+    tick(deltaTime, birdSpeed) {
       let toremove = null;
       for (let i = 0; i < this.objs.length; i++) {
-        this.objs[i].position.z += PILLAR_SPEED * (deltaTime / 1e3);
+        this.objs[i].position.z += birdSpeed * (deltaTime / 1e3);
         if (this.objs[i].position.z > FLOOR_DEPTH) {
           toremove = i;
         }
@@ -81690,6 +81695,7 @@ return a / b;`;
   var Game = class {
     constructor() {
       this.score = 0;
+      this.birdSpeed = INITIAL_BIRD_SPEED;
       ({
         scene: this.scene,
         camera: this.camera,
@@ -81706,10 +81712,15 @@ return a / b;`;
       addSideWalls(this.scene);
       setup4(this.camera, this.bird.obj);
     }
+    setBirdSpeed() {
+      const incrementDist = Math.floor(this.score / BIRD_SPEED_INC_DIST);
+      this.birdSpeed = INITIAL_BIRD_SPEED + incrementDist * BIRD_SPEED_INCREMENT;
+    }
     tick(data) {
       const { time: time2, deltaTime, controls } = data;
-      this.floor.tick(deltaTime);
-      this.trees.tick(time2, deltaTime);
+      this.setBirdSpeed();
+      this.floor.tick(deltaTime, this.birdSpeed);
+      this.trees.tick(time2, deltaTime, this.birdSpeed);
       this.bird.tick(deltaTime, controls);
       if (!ORBIT_CAM)
         this.camera.tick();
@@ -81717,7 +81728,7 @@ return a / b;`;
         lg10("Crashed!!");
         return true;
       }
-      this.score += deltaTime / 1e3 * PILLAR_SPEED;
+      this.score += deltaTime / 1e3 * this.birdSpeed;
       return false;
     }
     render() {
@@ -81793,6 +81804,7 @@ return a / b;`;
           return;
         }
         ui.stats.setStat("score", game.score);
+        ui.stats.setStat("speed", game.birdSpeed);
         ui.stats.setStat("FPS", 1e3 / deltaTime);
         webcamPoseWrapper.update();
         ui.update();

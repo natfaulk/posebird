@@ -27,7 +27,6 @@ const lg = makeLogger('App')
   // render first frame - can use as a background
   game.render()
 
-  
   ui.hideloadingScreen()
   lg('Setup done')
 
@@ -80,6 +79,7 @@ const lg = makeLogger('App')
       }
       
       ui.stats.setStat('score', game.score)
+      ui.stats.setStat('speed', game.birdSpeed)
       ui.stats.setStat('FPS', 1000/(deltaTime))
 
       // ideally this should be offloaded to a web worker

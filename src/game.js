@@ -17,6 +17,7 @@ const ORBIT_CAM = false
 class Game {
   constructor() {
     this.score = 0
+    this.birdSpeed = CONSTS.INITIAL_BIRD_SPEED
 
     ;({
       scene: this.scene, 
@@ -40,12 +41,18 @@ class Game {
     Camera.setup(this.camera, this.bird.obj)
   }
 
+  setBirdSpeed() {
+    const incrementDist = Math.floor(this.score / CONSTS.BIRD_SPEED_INC_DIST)
+    this.birdSpeed = CONSTS.INITIAL_BIRD_SPEED + incrementDist * CONSTS.BIRD_SPEED_INCREMENT
+  }
+
   // returns if game is over or not
   tick(data) {
     const {time, deltaTime, controls} = data
 
-    this.floor.tick(deltaTime)
-    this.trees.tick(time, deltaTime)
+    this.setBirdSpeed()
+    this.floor.tick(deltaTime, this.birdSpeed)
+    this.trees.tick(time, deltaTime, this.birdSpeed)
 
     this.bird.tick(deltaTime, controls)
     if (!ORBIT_CAM) this.camera.tick()
@@ -55,7 +62,7 @@ class Game {
       return true
     }
 
-    this.score += (deltaTime / 1000) * CONSTS.PILLAR_SPEED
+    this.score += (deltaTime / 1000) * this.birdSpeed
 
     return false
   }

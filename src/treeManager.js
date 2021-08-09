@@ -17,7 +17,7 @@ export class TreeManager {
   }
 
   addInitialTrees() {
-    for (let i = -3; i > TREE_ADD_POINT; i -= CONSTS.PILLAR_SPACING * 2) {
+    for (let i = -3; i > TREE_ADD_POINT; i -= CONSTS.TREE_SPACING * 2) {
       this.add(i)
       this.add(i, l_edge - CONSTS.FLOOR_OVERHANG, l_edge)
       this.add(i, r_edge, r_edge + CONSTS.FLOOR_OVERHANG)
@@ -50,10 +50,10 @@ export class TreeManager {
   }
 
   // moves trees forward and removes them once they exit the scene
-  moveForward(deltaTime) {
+  moveForward(deltaTime, birdSpeed) {
     const toremove = []
     this.trees.forEach((t, i) => {
-      t.moveBy(0, CONSTS.PILLAR_SPEED * (deltaTime / 1000))
+      t.moveBy(0, birdSpeed * (deltaTime / 1000))
 
       if (t.position.y > CONSTS.FLOOR_DEPTH) {
         toremove.push(i)
@@ -66,13 +66,13 @@ export class TreeManager {
     }
   }
 
-  tick(time, deltaTime) {
-    this.moveForward(deltaTime)
+  tick(time, deltaTime, birdSpeed) {
+    this.moveForward(deltaTime, birdSpeed)
 
     let addTree = false
     if (this.trees.length > 0) {
       const lastTreePosition = this.trees[this.trees.length - 1].position.y
-      const treeSpacing = TREE_ADD_POINT + CONSTS.PILLAR_SPACING
+      const treeSpacing = TREE_ADD_POINT + CONSTS.TREE_SPACING
 
       if (lastTreePosition > treeSpacing) {
         addTree = true

@@ -78,11 +78,11 @@ export class Floor {
     lg('Floor panel removed')
   }
 
-  tick(deltaTime) {
+  tick(deltaTime, birdSpeed) {
     // should never be more than 1...
     let toremove = null
     for (let i = 0; i < this.objs.length; i++) {
-      this.objs[i].position.z += CONSTS.PILLAR_SPEED * (deltaTime / 1000)
+      this.objs[i].position.z += birdSpeed * (deltaTime / 1000)
       
       if (this.objs[i].position.z > CONSTS.FLOOR_DEPTH) {
         toremove = i

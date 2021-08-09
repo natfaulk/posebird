@@ -35,8 +35,10 @@ export const BIRD_INIT_POS_Z = CAMERA_POS_Z + CAMERA_BIRD_OFFSET_Z
 
 export const BIRD_MAX_SPEED_X = 2 // m/s
 
-export const PILLAR_SPEED = 1.2 // m/s
-export const PILLAR_SPACING = 2 // m
+export const INITIAL_BIRD_SPEED = 1.2 // m/s
+export const BIRD_SPEED_INCREMENT = 0.1 // m/s
+export const BIRD_SPEED_INC_DIST = 10 // m
+export const TREE_SPACING = 2 // m
 
 export const FOG_ENABLED = true
 export const SHOW_BOUNDING_BOXES = false
