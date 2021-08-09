@@ -11,7 +11,7 @@ export class Stats {
 
   setStat(label, val) {
     const s = this.all[label]
-    s.setVal(val)
+    if (s !== undefined) s.setVal(val)
   }
 
   update() {

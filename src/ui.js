@@ -47,14 +47,14 @@ export class UI {
       smoothing: 0.5,
       fixed: 2
     })
-    this.stats.addStat('shoulder', {
-      fixed: 2,
-      prettyLabel: 'Shoulder Angle'
-    })
-    this.stats.addStat('arm', {
-      fixed: 2,
-      prettyLabel: 'Arm Angle'
-    })
+    // this.stats.addStat('shoulder', {
+    //   fixed: 2,
+    //   prettyLabel: 'Shoulder Angle'
+    // })
+    // this.stats.addStat('arm', {
+    //   fixed: 2,
+    //   prettyLabel: 'Arm Angle'
+    // })
   }
 
   hideMenu() {

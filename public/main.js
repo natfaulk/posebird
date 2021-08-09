@@ -1650,7 +1650,8 @@
     }
     setStat(label, val) {
       const s = this.all[label];
-      s.setVal(val);
+      if (s !== void 0)
+        s.setVal(val);
     }
     update() {
       for (const i of Object.values(this.all)) {
@@ -1729,14 +1730,6 @@
       this.stats.addStat("FPS", {
         smoothing: 0.5,
         fixed: 2
-      });
-      this.stats.addStat("shoulder", {
-        fixed: 2,
-        prettyLabel: "Shoulder Angle"
-      });
-      this.stats.addStat("arm", {
-        fixed: 2,
-        prettyLabel: "Arm Angle"
       });
     }
     hideMenu() {
