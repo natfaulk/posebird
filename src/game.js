@@ -8,6 +8,7 @@ import * as CONSTS from './constants'
 
 import makeLogger from '@natfaulk/supersimplelogger'
 import {Floor} from './floor'
+import {addSideWalls} from './sidewall'
 const lg = makeLogger('Game')
 
 // only use for debugging as is broken...
@@ -32,6 +33,8 @@ class Game {
     this.bird = await newBird(this.scene)
     this.trees = new TreeManager(this.scene)
     this.collisions = new Collisions(this.bird, this.trees)
+
+    addSideWalls(this.scene)
 
     // performs setup and adds custom tick method to camera
     Camera.setup(this.camera, this.bird.obj)

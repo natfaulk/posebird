@@ -1,4 +1,4 @@
-export const FLOOR_WIDTH = 20
+export const FLOOR_WIDTH = 50
 // extra strips up side of floor to hide edge of world
 export const FLOOR_OVERHANG = 20
 export const FLOOR_DEPTH = 20

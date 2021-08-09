@@ -1,7 +1,11 @@
 import * as CONSTS from './constants'
 import {Tree} from './singleTree'
+import {randBetween} from './utils'
 
 const TREE_ADD_POINT = -CONSTS.FLOOR_DEPTH
+
+const l_edge = -CONSTS.FLOOR_WIDTH / 2
+const r_edge = CONSTS.FLOOR_WIDTH / 2
 
 export class TreeManager {
   constructor(scene) {
@@ -13,8 +17,10 @@ export class TreeManager {
   }
 
   addInitialTrees() {
-    for (let i = 0; i > TREE_ADD_POINT; i -= CONSTS.PILLAR_SPACING) {
+    for (let i = -3; i > TREE_ADD_POINT; i -= CONSTS.PILLAR_SPACING * 2) {
       this.add(i)
+      this.add(i, l_edge - CONSTS.FLOOR_OVERHANG, l_edge)
+      this.add(i, r_edge, r_edge + CONSTS.FLOOR_OVERHANG)
     }
   }
 
@@ -29,16 +35,18 @@ export class TreeManager {
     this.addInitialTrees()
   }
 
-  add(position=null) {
-    if (position === null) position = TREE_ADD_POINT
+  // assumes xmax > xmin
+  add(zposition, xmin, xmax) {
+    if (xmin === undefined) xmin = -CONSTS.FLOOR_WIDTH / 2
+    if (xmax === undefined) xmax = CONSTS.FLOOR_WIDTH / 2
+
+    if (zposition === undefined) zposition = TREE_ADD_POINT
 
     const t = new Tree(this.scene)
     this.trees.push(t)
 
-    t.setPosition(
-      (Math.random() - 0.5) * CONSTS.FLOOR_WIDTH,
-      position
-    )
+    const xpos = randBetween(xmin, xmax)
+    t.setPosition(xpos, zposition)
   }
 
   // moves trees forward and removes them once they exit the scene
@@ -75,6 +83,10 @@ export class TreeManager {
 
     if (addTree) {
       this.add()
+      // hacky way to limit when trees added on the sides
+      // ~ 1 / 3 of the time will be added on one side, 1/3 the other and 1/3 neither side
+      if (Math.random() < 1/3) this.add(undefined, l_edge - CONSTS.FLOOR_OVERHANG, l_edge)
+      else if (Math.random() < 0.5) this.add(undefined, r_edge, r_edge + CONSTS.FLOOR_OVERHANG)
       this.lastTreeTime = time
     }
   }

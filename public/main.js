@@ -1781,7 +1781,7 @@
   };
 
   // src/constants.js
-  var FLOOR_WIDTH = 20;
+  var FLOOR_WIDTH = 50;
   var FLOOR_OVERHANG = 20;
   var FLOOR_DEPTH = 20;
   var FLOOR_SQ_SIZE = 1;
@@ -81385,6 +81385,8 @@ return a / b;`;
 
   // src/treeManager.js
   var TREE_ADD_POINT = -FLOOR_DEPTH;
+  var l_edge = -FLOOR_WIDTH / 2;
+  var r_edge = FLOOR_WIDTH / 2;
   var TreeManager = class {
     constructor(scene) {
       this.scene = scene;
@@ -81393,8 +81395,10 @@ return a / b;`;
       this.addInitialTrees();
     }
     addInitialTrees() {
-      for (let i = 0; i > TREE_ADD_POINT; i -= PILLAR_SPACING) {
+      for (let i = -3; i > TREE_ADD_POINT; i -= PILLAR_SPACING * 2) {
         this.add(i);
+        this.add(i, l_edge - FLOOR_OVERHANG, l_edge);
+        this.add(i, r_edge, r_edge + FLOOR_OVERHANG);
       }
     }
     reset() {
@@ -81405,12 +81409,17 @@ return a / b;`;
       }
       this.addInitialTrees();
     }
-    add(position = null) {
-      if (position === null)
-        position = TREE_ADD_POINT;
+    add(zposition, xmin, xmax) {
+      if (xmin === void 0)
+        xmin = -FLOOR_WIDTH / 2;
+      if (xmax === void 0)
+        xmax = FLOOR_WIDTH / 2;
+      if (zposition === void 0)
+        zposition = TREE_ADD_POINT;
       const t = new Tree(this.scene);
       this.trees.push(t);
-      t.setPosition((Math.random() - 0.5) * FLOOR_WIDTH, position);
+      const xpos = randBetween(xmin, xmax);
+      t.setPosition(xpos, zposition);
     }
     moveForward(deltaTime) {
       const toremove = [];
@@ -81439,6 +81448,10 @@ return a / b;`;
       }
       if (addTree) {
         this.add();
+        if (Math.random() < 1 / 3)
+          this.add(void 0, l_edge - FLOOR_OVERHANG, l_edge);
+        else if (Math.random() < 0.5)
+          this.add(void 0, r_edge, r_edge + FLOOR_OVERHANG);
         this.lastTreeTime = time2;
       }
     }
@@ -81648,6 +81661,27 @@ return a / b;`;
     }
   };
 
+  // src/sidewall.js
+  var PLANE_SIZE = 50;
+  var makeSideWall = (scene) => {
+    const plane = new Mesh(new PlaneGeometry(PLANE_SIZE, PLANE_SIZE), new MeshPhongMaterial({
+      color: 255,
+      side: DoubleSide,
+      opacity: 0.5,
+      transparent: true
+    }));
+    scene.add(plane);
+    plane.rotation.y = Math.PI / 2;
+    plane.position.y = PLANE_SIZE / 2;
+    return plane;
+  };
+  var addSideWalls = (scene) => {
+    const w1 = makeSideWall(scene);
+    const w2 = makeSideWall(scene);
+    w1.position.x = -FLOOR_WIDTH / 2 - 0.5;
+    w2.position.x = FLOOR_WIDTH / 2 + 0.5;
+  };
+
   // src/game.js
   var lg10 = (0, import_supersimplelogger10.default)("Game");
   var ORBIT_CAM = false;
@@ -81667,6 +81701,7 @@ return a / b;`;
       this.bird = await newBird(this.scene);
       this.trees = new TreeManager(this.scene);
       this.collisions = new Collisions(this.bird, this.trees);
+      addSideWalls(this.scene);
       setup4(this.camera, this.bird.obj);
     }
     tick(data) {
