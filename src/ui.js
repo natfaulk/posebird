@@ -1,13 +1,30 @@
+import makeLogger from '@natfaulk/supersimplelogger'
+
+const lg = makeLogger('UI')
+
 const MENU_ID = 'menu-overlay'
 const PLAY_ID = 'play-button'
 const LOADING_ID = 'loading'
 const USE_CHROME_ID = 'use-chrome'
+const INTRO_ID = 'intro-overlay-child'
 
 import {Stats} from './stats'
 
 export class UI {
   constructor() {
+    // is a promise resolve function
+    this.playClicked = null
+
     document.getElementById(PLAY_ID).addEventListener('click', () => {
+      // if this doesn't work check that the menu is on top of any hidden elements above it!!
+      // ie check the z-index in the css file
+      lg('Play button clicked...')
+      if (this.playClicked === null) {
+        lg('No playclicked action....')
+      } else {
+        this.playClicked()
+      }        
+
       this.hideMenu()
     })
 
@@ -37,8 +54,11 @@ export class UI {
     document.getElementById(MENU_ID).style.visibility = 'hidden'
   }
   
-  showMenu() {
+  async showMenu() {
     document.getElementById(MENU_ID).style.visibility = 'visible'
+    return new Promise(resolve => {
+      this.playClicked = resolve
+    })
   }
 
   update() {
@@ -48,6 +68,33 @@ export class UI {
   hideloadingScreen() {
     document.getElementById(LOADING_ID).style.visibility = 'hidden'
   }
+  
+  // Flashes 3... 2... 1... Start
+  async intro() {
+    const el = document.getElementById(INTRO_ID)
+    el.style.visibility = 'visible'
+    el.innerHTML = 'Get Ready'
+  
+    const maxN = 3
+    const delay = 1000
+    for (let i = 0; i < maxN; i++) {
+      flashMessage(el, (i + 1) * delay, maxN - i)
+    }
+  
+    flashMessage(el, (maxN + 1) * delay, 'GO')
+
+    return new Promise(resolve => {
+      setTimeout(() => {
+        el.style.visibility = 'hidden'
+        resolve()  
+      }, (maxN + 2) * delay)
+    })
+  }
+
+}
+
+const flashMessage = (el, delay, n) => {
+  setTimeout(() => el.innerHTML = `${n}...`, delay)
 }
 
 export const hideUseChromeAlert = () => {
@@ -57,3 +104,4 @@ export const hideUseChromeAlert = () => {
 export const showUseChromeAlert = () => {
   document.getElementById(USE_CHROME_ID).style.visibility = 'visible'
 }
+

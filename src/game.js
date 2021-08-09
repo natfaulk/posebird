@@ -36,6 +36,7 @@ class Game {
     Camera.setup(this.camera, this.bird.obj)
   }
 
+  // returns if game is over or not
   tick(data) {
     const {time, deltaTime, controls} = data
 
@@ -48,11 +49,25 @@ class Game {
     if (this.collisions.tick()) {
       lg('Crashed!!')
       this.score += 1
+
+      return true
     }
+
+    return false
   }
 
   render() {
     this.renderer.render(this.scene, this.camera)
+  }
+
+  reset() {
+    this.floor.reset()
+    this.bird.reset()
+    this.trees.reset()
+    this.score = 0
+    
+    // run camera tick to reset camera
+    if (!ORBIT_CAM) this.camera.tick()
   }
 }
 

@@ -22,7 +22,7 @@ export const CAMERA_FAR = 1000
 export const CAMERA_CLEAR_COLOR = 0xb8c6db
 
 export const CAMERA_POS_X = 0
-export const CAMERA_POS_Y = 3
+export const CAMERA_POS_Y = 8
 export const CAMERA_POS_Z = 8
 
 export const CAMERA_BIRD_OFFSET_X = 0

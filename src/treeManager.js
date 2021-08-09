@@ -9,9 +9,24 @@ export class TreeManager {
     this.trees = []
     this.lastTreeTime = 0
 
+    this.addInitialTrees()
+  }
+
+  addInitialTrees() {
     for (let i = 0; i > TREE_ADD_POINT; i -= CONSTS.PILLAR_SPACING) {
       this.add(i)
     }
+  }
+
+  reset() {
+    this.lastTreeTime = 0
+
+    while (this.trees.length) {
+      const removed = this.trees.pop()
+      removed.cleanup()
+    }
+
+    this.addInitialTrees()
   }
 
   add(position=null) {

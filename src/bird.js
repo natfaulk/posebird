@@ -36,6 +36,17 @@ class Bird {
     this.lastPoseId = -1
   }
 
+  reset() {
+    this.flapping = {previousArmAngle: 0, inertia: 0, deltaTime: 0}
+    this.lastPoseId = -1
+
+    this.obj.position.x = CONSTS.BIRD_INIT_POS_X
+    this.obj.position.y = CONSTS.BIRD_INIT_POS_Y
+    this.obj.rotation.z = 0
+    this.bones.r_wing.rotation.x = 0
+    this.bones.l_wing.rotation.x = 0
+  }
+
   tick(deltaTime, controls) {
     const {shoulderAngle, armAngle, poseId} = controls
 

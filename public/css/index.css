@@ -12,27 +12,35 @@ div#stats-overlay {
 }
 
 div#menu-overlay {
+  /* wants to be on top of all but the chrome warning and the info box */
+  z-index: 5;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(10, 119, 0, 0.8);
+  background-color: rgba(94, 94, 94, 0.8);
 
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  animation: 1s
 }
 
 div.menu-spacer {
-  height: 10%;
+  height: 20%;
 }
 
 div.menu-inner {
   opacity: 100%;
   background-color: white;
   font-size: 4em;
-  border: 5px solid red;
+}
+
+div.menu-button {
+  cursor: pointer;
+  margin: 1rem;
 }
 
 div#pose-debug {
@@ -48,7 +56,7 @@ div#info {
   bottom: 0;
   background-color: white;
   color: gray;
-  z-index: 5;
+  z-index: 7;
   text-align: right;
   opacity: 0.5;
 }
@@ -57,18 +65,27 @@ div#info a {
   color: inherit;
 }
 
-div#loading {
+div.flex-centre {
   position: absolute;
   left: 0;
   right: 0;
-  background-color: gray;
   width: 100%;
   height: 100%;
   text-align: center;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+div#loading {
+  background-color: gray;
   font-size: 10vw;
+}
+
+div#intro-overlay div {
+  visibility: hidden;
+  font-size: 10vw;
+  background-color: white;
 }
 
 div#use-chrome {
@@ -80,5 +97,5 @@ div#use-chrome {
   background-color: orangered;
   color: white;
   font-size: medium;
-  z-index: 4;
+  z-index: 6;
 }

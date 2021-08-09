@@ -94,4 +94,8 @@ export class Floor {
       this.addSection()
     }
   }
+
+  reset() {
+    // doesn't need anything doing to it as it should go forever...
+  }
 }
