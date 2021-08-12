@@ -59,12 +59,13 @@ class Bird {
   }
 
   applyControls(deltaTime, shoulderAngle, armAngle, poseId) {
-    shoulderAngle = clamp(shoulderAngle, -0.3, 0.3)
-    armAngle = clamp(armAngle, -0.5, 0.5)
+    shoulderAngle = clamp(shoulderAngle, -CONSTS.MAX_SHOULDER_ANGLE, CONSTS.MAX_SHOULDER_ANGLE)
+    armAngle *= 2
+    armAngle = clamp(armAngle, -CONSTS.MAX_ARM_ANGLE, CONSTS.MAX_ARM_ANGLE)
     armAngle = -armAngle
 
     // Handle roll
-    const xspeed = (shoulderAngle / 0.3) * CONSTS.BIRD_MAX_SPEED_X * (deltaTime / 1000)
+    const xspeed = (shoulderAngle / CONSTS.MAX_SHOULDER_ANGLE) * CONSTS.BIRD_MAX_SPEED_X * (deltaTime / 1000)
     this.obj.position.x += xspeed
     this.obj.rotation.z = -2*shoulderAngle
 
@@ -90,7 +91,7 @@ class Bird {
       this.flapping.deltaTime += deltaTime
     } 
 
-    const inertiaScaled = this.flapping.inertia / MAX_INERTIA
+    const inertiaScaled = Math.sqrt(this.flapping.inertia / MAX_INERTIA)
     this.obj.position.y += MAX_UPWARD_SPEED * inertiaScaled * (deltaTime / 1000) 
   }
 

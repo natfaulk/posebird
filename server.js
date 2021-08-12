@@ -8,14 +8,14 @@ const SETTINGS_FILE = 'settings.json'
 
 const app = express()
 let port = 3000
-let dev = false
+let dev = true
 
 if (fs.existsSync(SETTINGS_FILE)) {
   const settingsraw = fs.readFileSync(SETTINGS_FILE, 'utf8')
   try {
     const settings = JSON.parse(settingsraw)
     if (typeof(settings.port) === 'number') port = settings.port
-    if (settings.dev === true) dev = true
+    if (settings.dev !== undefined) dev = settings.dev
   } catch (e) {
     lg('Invalid settings.json file. Using defaults')
   }

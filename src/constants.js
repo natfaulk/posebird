@@ -57,8 +57,11 @@ export const POSE_MIN_POSE_CONFIDENCE = 0.15
 // Flapping constants
 export const SHOULDER_ANGLE_SMOOTHING = 0.75
 export const ARM_ANGLE_SMOOTHING = 0.75
-export const MAX_INERTIA = 250 // ms
+export const MAX_INERTIA = 50 // ms
 // "gravity" is how fast it falls in free fall
 export const GRAVITY = -1.0
 // gravity always applied so subtract it
 export const MAX_UPWARD_SPEED = 4 - GRAVITY
+
+export const MAX_SHOULDER_ANGLE = 0.3
+export const MAX_ARM_ANGLE = 0.75
