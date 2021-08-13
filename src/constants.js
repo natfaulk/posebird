@@ -33,7 +33,7 @@ export const BIRD_INIT_POS_X = CAMERA_POS_X + CAMERA_BIRD_OFFSET_X
 export const BIRD_INIT_POS_Y = CAMERA_POS_Y + CAMERA_BIRD_OFFSET_Y
 export const BIRD_INIT_POS_Z = CAMERA_POS_Z + CAMERA_BIRD_OFFSET_Z
 
-export const BIRD_MAX_SPEED_X = 2 // m/s
+export const BIRD_MAX_SPEED_X = 5 // m/s
 
 export const INITIAL_BIRD_SPEED = 1.2 // m/s
 export const BIRD_SPEED_INCREMENT = 0.1 // m/s
@@ -59,9 +59,9 @@ export const SHOULDER_ANGLE_SMOOTHING = 0.75
 export const ARM_ANGLE_SMOOTHING = 0.75
 export const MAX_INERTIA = 500 // is arbitary for now
 // "gravity" is how fast it falls in free fall
-export const GRAVITY = -1
+export const GRAVITY = -4
 // gravity always applied so subtract it
-export const MAX_UPWARD_SPEED = 150 - GRAVITY
+export const MAX_UPWARD_SPEED = 200
 
 export const MAX_SHOULDER_ANGLE = 0.3
 export const MAX_ARM_ANGLE = 0.75
