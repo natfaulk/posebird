@@ -9,6 +9,8 @@ const LOADING_ID = 'loading'
 const USE_CHROME_ID = 'use-chrome'
 const INTRO_ID = 'intro-overlay-child'
 const PREV_SCORE_ID = 'previous-score'
+const HIGH_SCORE_ID = 'high-score'
+
 
 import {Stats} from './stats'
 
@@ -25,18 +27,22 @@ export class UI {
       fixed: 0,
       prettyLabel: 'Score'
     })
-    this.stats.addStat('speed', {
-      prettyLabel: 'Speed'
+    this.stats.addStat('highscore', {
+      fixed: 0,
+      prettyLabel: 'High Score'
     })
-    this.stats.addStat('poseFPS', {
-      smoothing: 0.5,
-      fixed: 2,
-      prettyLabel: 'Pose FPS'
-    })
-    this.stats.addStat('FPS', {
-      smoothing: 0.5,
-      fixed: 2
-    })
+    // this.stats.addStat('speed', {
+    //   prettyLabel: 'Speed'
+    // })
+    // this.stats.addStat('poseFPS', {
+    //   smoothing: 0.5,
+    //   fixed: 2,
+    //   prettyLabel: 'Pose FPS'
+    // })
+    // this.stats.addStat('FPS', {
+    //   smoothing: 0.5,
+    //   fixed: 2
+    // })
     // this.stats.addStat('shoulder', {
     //   fixed: 2,
     //   prettyLabel: 'Shoulder Angle'
@@ -109,6 +115,11 @@ export class UI {
   setPreviousScore(score) {
     const el = document.getElementById(PREV_SCORE_ID)
     el.innerHTML = `Previous Score: ${Math.round(score)}`
+  }
+
+  setHighScore(score) {
+    const el = document.getElementById(HIGH_SCORE_ID)
+    el.innerHTML = `High Score: ${Math.round(score)}`
   }
 }
 

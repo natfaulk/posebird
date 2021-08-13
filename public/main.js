@@ -29,7 +29,7 @@
   // node_modules/@natfaulk/supersimplelogger/src/index.js
   var require_src = __commonJS({
     "node_modules/@natfaulk/supersimplelogger/src/index.js"(exports, module) {
-      var makeLogger12 = (_prefix) => {
+      var makeLogger13 = (_prefix) => {
         let p2 = "";
         if (typeof process !== "undefined" && process.env.SSLOGGER_PROCESS_PREFIX !== void 0) {
           p2 = `[${process.env.SSLOGGER_PROCESS_PREFIX}] `;
@@ -47,9 +47,9 @@
         };
       };
       if (typeof module !== "undefined" && module.exports) {
-        module.exports = makeLogger12;
+        module.exports = makeLogger13;
       } else
-        window.makeLogger = makeLogger12;
+        window.makeLogger = makeLogger13;
     }
   });
 
@@ -1585,7 +1585,7 @@
   });
 
   // src/app.js
-  var import_supersimplelogger11 = __toModule(require_src());
+  var import_supersimplelogger12 = __toModule(require_src());
 
   // src/keyboard.js
   var state = {
@@ -1649,7 +1649,7 @@
   var BIRD_INIT_POS_X = CAMERA_POS_X + CAMERA_BIRD_OFFSET_X;
   var BIRD_INIT_POS_Y = CAMERA_POS_Y + CAMERA_BIRD_OFFSET_Y;
   var BIRD_INIT_POS_Z = CAMERA_POS_Z + CAMERA_BIRD_OFFSET_Z;
-  var BIRD_MAX_SPEED_X = 2;
+  var BIRD_MAX_SPEED_X = 5;
   var INITIAL_BIRD_SPEED = 1.2;
   var BIRD_SPEED_INCREMENT = 0.1;
   var BIRD_SPEED_INC_DIST = 10;
@@ -1666,8 +1666,8 @@
   var POSE_MIN_POSE_CONFIDENCE = 0.15;
   var SHOULDER_ANGLE_SMOOTHING = 0.75;
   var ARM_ANGLE_SMOOTHING = 0.75;
-  var GRAVITY = -1;
-  var MAX_UPWARD_SPEED = 150 - GRAVITY;
+  var GRAVITY = -4;
+  var MAX_UPWARD_SPEED = 200;
   var MAX_SHOULDER_ANGLE = 0.3;
   var MAX_ARM_ANGLE = 0.75;
   var ENDLESS_DEMO_MODE = true;
@@ -1753,6 +1753,7 @@
   var USE_CHROME_ID = "use-chrome";
   var INTRO_ID = "intro-overlay-child";
   var PREV_SCORE_ID = "previous-score";
+  var HIGH_SCORE_ID = "high-score";
   var UI = class {
     constructor() {
       this.playClicked = null;
@@ -1762,17 +1763,9 @@
         fixed: 0,
         prettyLabel: "Score"
       });
-      this.stats.addStat("speed", {
-        prettyLabel: "Speed"
-      });
-      this.stats.addStat("poseFPS", {
-        smoothing: 0.5,
-        fixed: 2,
-        prettyLabel: "Pose FPS"
-      });
-      this.stats.addStat("FPS", {
-        smoothing: 0.5,
-        fixed: 2
+      this.stats.addStat("highscore", {
+        fixed: 0,
+        prettyLabel: "High Score"
       });
     }
     clickPlayHandler() {
@@ -1823,6 +1816,10 @@
     setPreviousScore(score) {
       const el = document.getElementById(PREV_SCORE_ID);
       el.innerHTML = `Previous Score: ${Math.round(score)}`;
+    }
+    setHighScore(score) {
+      const el = document.getElementById(HIGH_SCORE_ID);
+      el.innerHTML = `High Score: ${Math.round(score)}`;
     }
   };
   var flashMessage = (el, delay, n) => {
@@ -81746,29 +81743,75 @@ return a / b;`;
   };
 
   // src/version.js
-  var VERSION = "0.1.4-testing";
+  var VERSION = "0.1.5-testing";
   var setVersion = () => {
     const el = document.getElementById("version");
     el.innerHTML = `Version: ${VERSION}`;
   };
 
+  // src/highscore.js
+  var import_supersimplelogger11 = __toModule(require_src());
+  var lg11 = (0, import_supersimplelogger11.default)("Highscore");
+  var GET_HIGHSCORE_URL = "highscore";
+  var SAVE_HIGHSCORE_URL = "submitHighscore";
+  var Highscore = class {
+    constructor() {
+      this.score = 0;
+      this.getHighscore();
+    }
+    async update(score) {
+      score = Math.round(score);
+      if (score <= this.score)
+        return;
+      lg11("this ran");
+      this.score = score;
+      await this.saveHighscore();
+    }
+    async saveHighscore() {
+      lg11("Sending highscore to server");
+      const res = await fetch(SAVE_HIGHSCORE_URL, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ score: this.score })
+      });
+      const parsed = await res.text();
+      if (parsed !== "ack") {
+        lg11("Failed to post highscore to server...");
+      }
+    }
+    async getHighscore() {
+      const res = await fetch(GET_HIGHSCORE_URL);
+      const parsed = await res.json();
+      this.score = parsed.score;
+      lg11(`Highscore from the server was ${this.score}`);
+    }
+  };
+
   // src/app.js
-  var lg11 = (0, import_supersimplelogger11.default)("App");
+  var lg12 = (0, import_supersimplelogger12.default)("App");
   (async () => {
-    lg11("Started...");
+    lg12("Started...");
     setVersion();
     const ui = new UI();
     ui.hideMenu();
     const webcamPoseWrapper = await newWebcamPoseWrapper(ui.stats);
     setup();
     const game = await newGame();
+    const highscore = new Highscore();
     await webcamPoseWrapper.update();
     game.render();
     ui.hideloadingScreen();
-    lg11("Setup done");
+    lg12("Setup done");
     const reset = async () => {
-      if (game.score > 0)
+      if (game.score > 0) {
         ui.setPreviousScore(game.score);
+        highscore.update(game.score);
+        ui.stats.setStat("highscore", highscore.score);
+      }
+      ui.setHighScore(highscore.score);
       game.reset();
       game.render();
       await ui.showMenu();
@@ -81800,8 +81843,7 @@ return a / b;`;
           return;
         }
         ui.stats.setStat("score", game.score);
-        ui.stats.setStat("speed", game.birdSpeed);
-        ui.stats.setStat("FPS", 1e3 / deltaTime);
+        ui.stats.setStat("highscore", highscore.score);
         webcamPoseWrapper.update();
         ui.update();
         game.render();

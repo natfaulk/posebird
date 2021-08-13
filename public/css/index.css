@@ -9,6 +9,7 @@ div#stats-overlay {
   top: 0;
   font-size: 2em;
   text-align: right;
+  background-color: white;
 }
 
 div#menu-overlay {
@@ -43,7 +44,7 @@ div.menu-button {
   margin: 1rem;
 }
 
-div#previous-score {
+div.score-text {
   background-color: white;
   font-size: 2em;
 }

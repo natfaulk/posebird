@@ -6,6 +6,7 @@ import {UI} from './ui'
 import {newWebcamPoseWrapper} from './webcamPoseWrapper'
 import {newGame} from './game'
 import {setVersion} from './version'
+import {Highscore} from './highscore'
 
 const lg = makeLogger('App')
 
@@ -21,19 +22,27 @@ const lg = makeLogger('App')
   Keyboard.setup()
   
   const game = await newGame()
+  const highscore = new Highscore
   
   // prefire one of these else causes whole thing to hang in first few game loops
   await webcamPoseWrapper.update()
   // render first frame - can use as a background
   game.render()
-
+  
   ui.hideloadingScreen()
   lg('Setup done')
 
   const reset = async () => {
     // Don't show if first time playing
     // scores currently don't persist between refreshes
-    if (game.score > 0) ui.setPreviousScore(game.score)
+    if (game.score > 0) {
+      ui.setPreviousScore(game.score)
+      highscore.update(game.score)
+      ui.stats.setStat('highscore', highscore.score)
+    }
+
+    ui.setHighScore(highscore.score)
+
     game.reset()
     // render first frame - can use as a background
     game.render()
@@ -79,8 +88,10 @@ const lg = makeLogger('App')
       }
       
       ui.stats.setStat('score', game.score)
-      ui.stats.setStat('speed', game.birdSpeed)
-      ui.stats.setStat('FPS', 1000/(deltaTime))
+      ui.stats.setStat('highscore', highscore.score)
+
+      // ui.stats.setStat('speed', game.birdSpeed)
+      // ui.stats.setStat('FPS', 1000/(deltaTime))
 
       // ideally this should be offloaded to a web worker
       webcamPoseWrapper.update()
