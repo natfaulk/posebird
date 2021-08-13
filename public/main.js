@@ -1622,6 +1622,57 @@
   // src/ui.js
   var import_supersimplelogger = __toModule(require_src());
 
+  // src/constants.js
+  var FLOOR_WIDTH = 50;
+  var FLOOR_OVERHANG = 20;
+  var FLOOR_DEPTH = 20;
+  var FLOOR_SQ_SIZE = 1;
+  var PILLAR_WIDTH = 0.5;
+  var PILLAR_HEIGHT = 10;
+  var PILLAR_COLOR = 6706748;
+  var BRANCH_MIN_LENGTH = 1;
+  var BRANCH_MAX_LENGTH = 4;
+  var BRANCH_MIN_HEIGHT = 0.2;
+  var BRANCH_MAX_HEIGHT = 0.9;
+  var LEAF_CUBE_SIZE = 1.75;
+  var LEAF_COLOR = 5079106;
+  var CAMERA_FOV = 75;
+  var CAMERA_NEAR = 0.1;
+  var CAMERA_FAR = 1e3;
+  var CAMERA_CLEAR_COLOR = 12109531;
+  var CAMERA_POS_X = 0;
+  var CAMERA_POS_Y = 8;
+  var CAMERA_POS_Z = 8;
+  var CAMERA_BIRD_OFFSET_X = 0;
+  var CAMERA_BIRD_OFFSET_Y = -0.3;
+  var CAMERA_BIRD_OFFSET_Z = -1;
+  var BIRD_INIT_POS_X = CAMERA_POS_X + CAMERA_BIRD_OFFSET_X;
+  var BIRD_INIT_POS_Y = CAMERA_POS_Y + CAMERA_BIRD_OFFSET_Y;
+  var BIRD_INIT_POS_Z = CAMERA_POS_Z + CAMERA_BIRD_OFFSET_Z;
+  var BIRD_MAX_SPEED_X = 2;
+  var INITIAL_BIRD_SPEED = 1.2;
+  var BIRD_SPEED_INCREMENT = 0.1;
+  var BIRD_SPEED_INC_DIST = 10;
+  var TREE_SPACING = 2;
+  var FOG_ENABLED = true;
+  var SHOW_BOUNDING_BOXES = false;
+  var BOUNDING_BOX_COLOR = 16711680;
+  var WEBCAM_VIDEO_SIZE = {
+    x: 1280,
+    y: 720
+  };
+  var WEBCAM_MIRROR_CAMERA = true;
+  var POSE_MIN_PART_CONFIDENCE = 0.1;
+  var POSE_MIN_POSE_CONFIDENCE = 0.15;
+  var SHOULDER_ANGLE_SMOOTHING = 0.75;
+  var ARM_ANGLE_SMOOTHING = 0.75;
+  var GRAVITY = -1;
+  var MAX_UPWARD_SPEED = 150 - GRAVITY;
+  var MAX_SHOULDER_ANGLE = 0.3;
+  var MAX_ARM_ANGLE = 0.75;
+  var ENDLESS_DEMO_MODE = true;
+  var ENDLESS_DEMO_MENU_WAIT = 5 * 1e3;
+
   // src/utils.js
   var clamp = (val, min5, max5) => {
     if (val >= max5)
@@ -1705,15 +1756,7 @@
   var UI = class {
     constructor() {
       this.playClicked = null;
-      document.getElementById(PLAY_ID).addEventListener("click", () => {
-        lg("Play button clicked...");
-        if (this.playClicked === null) {
-          lg("No playclicked action....");
-        } else {
-          this.playClicked();
-        }
-        this.hideMenu();
-      });
+      document.getElementById(PLAY_ID).addEventListener("click", this.clickPlayHandler.bind(this));
       this.stats = new Stats();
       this.stats.addStat("score", {
         fixed: 0,
@@ -1732,11 +1775,24 @@
         fixed: 2
       });
     }
+    clickPlayHandler() {
+      lg("Play button clicked...");
+      if (this.playClicked === null) {
+        lg("No playclicked action....");
+      } else {
+        this.playClicked();
+      }
+      this.hideMenu();
+    }
     hideMenu() {
       document.getElementById(MENU_ID).style.visibility = "hidden";
     }
     async showMenu() {
       document.getElementById(MENU_ID).style.visibility = "visible";
+      if (ENDLESS_DEMO_MODE)
+        setTimeout(() => {
+          this.clickPlayHandler();
+        }, ENDLESS_DEMO_MENU_WAIT);
       return new Promise((resolve) => {
         this.playClicked = resolve;
       });
@@ -1775,56 +1831,6 @@
   var showUseChromeAlert = () => {
     document.getElementById(USE_CHROME_ID).style.visibility = "visible";
   };
-
-  // src/constants.js
-  var FLOOR_WIDTH = 50;
-  var FLOOR_OVERHANG = 20;
-  var FLOOR_DEPTH = 20;
-  var FLOOR_SQ_SIZE = 1;
-  var PILLAR_WIDTH = 0.5;
-  var PILLAR_HEIGHT = 10;
-  var PILLAR_COLOR = 6706748;
-  var BRANCH_MIN_LENGTH = 1;
-  var BRANCH_MAX_LENGTH = 4;
-  var BRANCH_MIN_HEIGHT = 0.2;
-  var BRANCH_MAX_HEIGHT = 0.9;
-  var LEAF_CUBE_SIZE = 1.75;
-  var LEAF_COLOR = 5079106;
-  var CAMERA_FOV = 75;
-  var CAMERA_NEAR = 0.1;
-  var CAMERA_FAR = 1e3;
-  var CAMERA_CLEAR_COLOR = 12109531;
-  var CAMERA_POS_X = 0;
-  var CAMERA_POS_Y = 8;
-  var CAMERA_POS_Z = 8;
-  var CAMERA_BIRD_OFFSET_X = 0;
-  var CAMERA_BIRD_OFFSET_Y = -0.3;
-  var CAMERA_BIRD_OFFSET_Z = -1;
-  var BIRD_INIT_POS_X = CAMERA_POS_X + CAMERA_BIRD_OFFSET_X;
-  var BIRD_INIT_POS_Y = CAMERA_POS_Y + CAMERA_BIRD_OFFSET_Y;
-  var BIRD_INIT_POS_Z = CAMERA_POS_Z + CAMERA_BIRD_OFFSET_Z;
-  var BIRD_MAX_SPEED_X = 2;
-  var INITIAL_BIRD_SPEED = 1.2;
-  var BIRD_SPEED_INCREMENT = 0.1;
-  var BIRD_SPEED_INC_DIST = 10;
-  var TREE_SPACING = 2;
-  var FOG_ENABLED = true;
-  var SHOW_BOUNDING_BOXES = false;
-  var BOUNDING_BOX_COLOR = 16711680;
-  var WEBCAM_VIDEO_SIZE = {
-    x: 1280,
-    y: 720
-  };
-  var WEBCAM_MIRROR_CAMERA = true;
-  var POSE_MIN_PART_CONFIDENCE = 0.1;
-  var POSE_MIN_POSE_CONFIDENCE = 0.15;
-  var SHOULDER_ANGLE_SMOOTHING = 0.75;
-  var ARM_ANGLE_SMOOTHING = 0.75;
-  var MAX_INERTIA = 50;
-  var GRAVITY = -1;
-  var MAX_UPWARD_SPEED = 4 - GRAVITY;
-  var MAX_SHOULDER_ANGLE = 0.3;
-  var MAX_ARM_ANGLE = 0.75;
 
   // src/webcam.js
   var import_supersimplelogger2 = __toModule(require_src());
@@ -81494,22 +81500,16 @@ return a / b;`;
       this.bones.r_wing.rotation.x = armAngle;
       this.bones.l_wing.rotation.x = armAngle;
       if (poseId != this.lastPoseId) {
-        if (armAngle < this.flapping.previousArmAngle)
-          this.flapping.inertia += deltaTime + this.flapping.deltaTime;
-        if (armAngle >= this.flapping.previousArmAngle) {
-          this.flapping.inertia = 0;
-          this.flapping.deltaTime = 0;
+        if (armAngle < this.flapping.previousArmAngle) {
+          const deltaAng = this.flapping.previousArmAngle - armAngle;
+          this.obj.position.y += deltaAng * MAX_UPWARD_SPEED * (deltaTime / 1e3);
         }
-        if (this.flapping.inertia > MAX_INERTIA)
-          this.flapping.inertia = MAX_INERTIA;
         this.flapping.previousArmAngle = armAngle;
         this.lastPoseId = poseId;
         this.flapping.deltaTime = 0;
       } else {
         this.flapping.deltaTime += deltaTime;
       }
-      const inertiaScaled = Math.sqrt(this.flapping.inertia / MAX_INERTIA);
-      this.obj.position.y += MAX_UPWARD_SPEED * inertiaScaled * (deltaTime / 1e3);
     }
     limitPosition() {
       this.obj.position.x = clamp(this.obj.position.x, -FLOOR_WIDTH / 2, FLOOR_WIDTH / 2);
@@ -81746,7 +81746,7 @@ return a / b;`;
   };
 
   // src/version.js
-  var VERSION = "0.1.4";
+  var VERSION = "0.1.4-testing";
   var setVersion = () => {
     const el = document.getElementById("version");
     el.innerHTML = `Version: ${VERSION}`;

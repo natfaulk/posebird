@@ -1,4 +1,5 @@
 import makeLogger from '@natfaulk/supersimplelogger'
+import * as CONSTS from './constants'
 
 const lg = makeLogger('UI')
 
@@ -16,18 +17,7 @@ export class UI {
     // is a promise resolve function
     this.playClicked = null
 
-    document.getElementById(PLAY_ID).addEventListener('click', () => {
-      // if this doesn't work check that the menu is on top of any hidden elements above it!!
-      // ie check the z-index in the css file
-      lg('Play button clicked...')
-      if (this.playClicked === null) {
-        lg('No playclicked action....')
-      } else {
-        this.playClicked()
-      }        
-
-      this.hideMenu()
-    })
+    document.getElementById(PLAY_ID).addEventListener('click', this.clickPlayHandler.bind(this))
 
     this.stats = new Stats
 
@@ -57,12 +47,30 @@ export class UI {
     // })
   }
 
+  clickPlayHandler() {
+    // if this doesn't work check that the menu is on top of any hidden elements above it!!
+    // ie check the z-index in the css file
+    lg('Play button clicked...')
+    if (this.playClicked === null) {
+      lg('No playclicked action....')
+    } else {
+      this.playClicked()
+    }        
+
+    this.hideMenu()
+  }
+
   hideMenu() {
     document.getElementById(MENU_ID).style.visibility = 'hidden'
   }
   
   async showMenu() {
     document.getElementById(MENU_ID).style.visibility = 'visible'
+    
+    if (CONSTS.ENDLESS_DEMO_MODE) setTimeout(() => {
+      this.clickPlayHandler()
+    }, CONSTS.ENDLESS_DEMO_MENU_WAIT)
+    
     return new Promise(resolve => {
       this.playClicked = resolve
     })

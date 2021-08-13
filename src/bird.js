@@ -77,13 +77,19 @@ class Bird {
 
     // only apply controls if new controls to apply
     if (poseId != this.lastPoseId) {
-      if (armAngle < this.flapping.previousArmAngle) this.flapping.inertia += (deltaTime + this.flapping.deltaTime)
-      if (armAngle >= this.flapping.previousArmAngle) {
-        this.flapping.inertia = 0
-        this.flapping.deltaTime = 0
-      }
+      // if (armAngle < this.flapping.previousArmAngle) this.flapping.inertia += (deltaTime + this.flapping.deltaTime)
+      // if (armAngle >= this.flapping.previousArmAngle) {
+      //   this.flapping.inertia = 0
+      //   this.flapping.deltaTime = 0
+      // }
       
-      if (this.flapping.inertia > MAX_INERTIA) this.flapping.inertia = MAX_INERTIA
+      // if (this.flapping.inertia > MAX_INERTIA) this.flapping.inertia = MAX_INERTIA
+
+      if (armAngle < this.flapping.previousArmAngle) {
+        const deltaAng = this.flapping.previousArmAngle - armAngle
+        this.obj.position.y += deltaAng * MAX_UPWARD_SPEED * (deltaTime / 1000) 
+      }
+
       this.flapping.previousArmAngle = armAngle
       this.lastPoseId = poseId
       this.flapping.deltaTime = 0
@@ -91,8 +97,7 @@ class Bird {
       this.flapping.deltaTime += deltaTime
     } 
 
-    const inertiaScaled = Math.sqrt(this.flapping.inertia / MAX_INERTIA)
-    this.obj.position.y += MAX_UPWARD_SPEED * inertiaScaled * (deltaTime / 1000) 
+    // const inertiaScaled = Math.sqrt(this.flapping.inertia / MAX_INERTIA)
   }
 
   limitPosition() {
